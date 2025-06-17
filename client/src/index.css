@@ -1,0 +1,162 @@
+/* Global reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  background: linear-gradient(to right, #667eea, #764ba2);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Form container for both login & register */
+.form-container,
+.login-container {
+  width: 100%;
+  max-width: 360px;
+  padding: 40px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Common card styles */
+.form-card,
+.login-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-card h2,
+.login-card h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Inputs and selects */
+input,
+select {
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+input:focus,
+select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 3px #667eea;
+}
+
+/* Buttons */
+button {
+  padding: 12px;
+  background-color: #667eea;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background-color: #5a67d8;
+}
+
+/* Message display */
+.message {
+  margin-top: 10px;
+  font-size: 14px;
+  text-align: center;
+  color: #d9534f;
+}
+
+/* Link text under forms */
+.link-text {
+  text-align: center;
+  font-size: 14px;
+  margin-top: 12px;
+}
+/* Dashboard shared style */
+.dashboard {
+  max-width: 600px;
+  margin: 60px auto;
+  background: #fff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.dashboard h2 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.dashboard p {
+  font-size: 16px;
+  color: #666;
+}
+/* Student Dashboard Styles */
+.student-dashboard {
+  max-width: 800px;
+  margin: 60px auto;
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.student-dashboard h2 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.student-dashboard h4 {
+  margin: 20px 0 30px;
+  color: #555;
+}
+
+.course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.course-card {
+  background: #f8f8f8;
+  border-left: 5px solid #667eea;
+  padding: 20px;
+  text-align: left;
+  border-radius: 8px;
+}
+
+.course-card h5 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.progress-bar {
+  height: 10px;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #667eea;
+  transition: width 0.3s ease-in-out;
+}
