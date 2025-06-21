@@ -1,85 +1,63 @@
-import React, { useState } from "react";
-import "./StudentDashboard.css";
-
-const assignmentsData = [
-  {
-    id: 1,
-    chapter: "Introduction to Node.js",
-    question: "Explain the architecture of Node.js with diagrams.",
-    deadline: "2025-06-25",
-    status: "Not Submitted",
-  },
-  {
-    id: 2,
-    chapter: "Express Framework",
-    question: "Create a basic Express server with routing and middleware.",
-    deadline: "2025-06-28",
-    status: "Submitted",
-  },
-  {
-    id: 3,
-    chapter: "REST APIs",
-    question: "Build a RESTful API for a todo app with CRUD operations.",
-    deadline: "2025-07-01",
-    status: "Graded",
-  },
-];
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 function StudentAssignments() {
-  const [submissions, setSubmissions] = useState({});
+  const [assignments, setAssignments] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [file, setFile] = useState(null);
+  const [msg, setMsg] = useState("");
 
-  const handleFileChange = (event, id) => {
-    setSubmissions({
-      ...submissions,
-      [id]: event.target.files[0],
-    });
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    axios.get(`http://localhost:5000/api/assignments/byUser/${user._id}`)
+      .then(res => setAssignments(res.data));
+  }, [msg]);
+
+  const handleSelect = (a) => {
+    setSelected(a);
+    setMsg("");
   };
 
-  const handleSubmit = (id) => {
-    alert(`Assignment ${id} submitted successfully!`);
+  const handleFileChange = (e) => setFile(e.target.files[0]);
+
+  const handleSubmit = async () => {
+    if (!file) return setMsg("Choose a file!");
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("student", selected.student);
+    formData.append("course", selected.course._id);
+    formData.append("chapter", selected.chapter);
+
+    await axios.post("http://localhost:5000/api/assignments/submit", formData);
+    setMsg("Assignment submitted!");
+    setFile(null);
   };
 
   return (
-    <div className="assignment-container">
-      <h2 className="heading">📄 Assignments</h2>
-      <div className="assignment-list">
-        {assignmentsData.map((assignment) => (
-          <div className="assignment-card" key={assignment.id}>
-            <h5>{assignment.chapter}</h5>
-            <p><strong>Question:</strong> {assignment.question}</p>
-            <p><strong>Deadline:</strong> {assignment.deadline}</p>
-            <p><strong>Status:</strong> {assignment.status}</p>
-
-            {assignment.status === "Not Submitted" && (
-              <>
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => handleFileChange(e, assignment.id)}
-                />
-                <button
-                  className="submit-btn"
-                  onClick={() => handleSubmit(assignment.id)}
-                  disabled={!submissions[assignment.id]}
-                >
-                  Submit Assignment
-                </button>
-              </>
+    <div>
+      <h2>Assignments</h2>
+      <ul>
+        {assignments.map((a, idx) => (
+          <li key={a._id || idx} style={{ margin: 6 }}>
+            {a.course.title} - Chapter {a.chapter} - {a.status}
+            {a.status !== "Graded" && (
+              <button style={{ marginLeft: 6 }} onClick={() => handleSelect(a)}>Submit/Resubmit</button>
             )}
-
-            {assignment.status === "Submitted" && (
-              <p className="submitted-text">✅ Your assignment has been submitted.</p>
-            )}
-
-            {assignment.status === "Graded" && (
-              <p className="graded-text">📊 Assignment graded. Check feedback.</p>
-            )}
-          </div>
+            {a.status === "Graded" && <span> | Grade: {a.grade}</span>}
+            {a.fileUrl && <a href={a.fileUrl} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 6 }}>View File</a>}
+          </li>
         ))}
-      </div>
+      </ul>
+      {selected &&
+        <div>
+          <h5>Submit Assignment for {selected.course.title}, Chapter {selected.chapter}</h5>
+          <input type="file" onChange={handleFileChange} />
+          <button onClick={handleSubmit}>Upload</button>
+          <button onClick={() => setSelected(null)} style={{ marginLeft: 8 }}>Cancel</button>
+          <p>{msg}</p>
+        </div>
+      }
     </div>
   );
 }
-
 export default StudentAssignments;
-

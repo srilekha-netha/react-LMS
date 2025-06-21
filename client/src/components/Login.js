@@ -9,18 +9,20 @@ function Login() {
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", form);
       const role = res.data.user.role;
+<<<<<<< HEAD
       setMessage("Login successful!");
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
+=======
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+>>>>>>> origin/Spandana
       if (role === "student") navigate("/student");
       else if (role === "teacher") navigate("/teacher");
       else if (role === "admin") navigate("/admin");
@@ -71,5 +73,4 @@ function Login() {
     </div>
   );
 }
-
 export default Login;

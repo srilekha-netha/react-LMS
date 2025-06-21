@@ -1,139 +1,62 @@
 import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-function CourseManagement() {
-  const [courses, setCourses] = useState([]);
-  const [filter, setFilter] = useState("all");
+function CourseDetails() {
+  const { id } = useParams();
+  const [course, setCourse] = useState(null);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  // Fetch all courses
   useEffect(() => {
-    axios
-      .get("/api/admin/courses")
-      .then((res) => setCourses(res.data))
-      .catch((err) => console.error("Error loading courses:", err));
-  }, []);
-
-  const handleAction = (id, action) => {
-    axios
-      .put(`/api/admin/courses/${id}/${action}`)
-      .then(() => {
-        alert(`Course ${action}d successfully`);
-        setCourses((prev) =>
-          prev.map((c) =>
-            c._id === id ? { ...c, status: action === "approve" ? "Approved" : action === "reject" ? "Rejected" : c.status } : c
-          )
-        );
-      })
-      .catch((err) => alert("Action failed:", err));
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this course?")) {
-      axios
-        .delete(`/api/admin/courses/${id}`)
-        .then(() => {
-          alert("Deleted");
-          setCourses((prev) => prev.filter((c) => c._id !== id));
-        })
-        .catch((err) => alert("Delete failed"));
+    // Prevent making API call if id is undefined
+    if (!id || id === "undefined") {
+      setError("Invalid course ID. Please select a course again.");
+      return;
     }
-  };
+    axios.get(`http://localhost:5000/api/courses/${id}`)
+      .then(res => setCourse(res.data))
+      .catch(err => {
+        setError("Failed to fetch course.");
+      });
+  }, [id]);
 
-  const filteredCourses =
-    filter === "all" ? courses : courses.filter((course) => course.status === filter);
+  if (error) return <div style={{ color: "red" }}>{error}</div>;
+  if (!course) return <div>Loading...</div>;
 
   return (
-    <div className="container mt-4">
-      <h3 className="mb-4">📘 Course Management</h3>
-
-      <div className="d-flex gap-3 mb-3">
-        <select
-          className="form-select w-auto"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        >
-          <option value="all">All</option>
-          <option value="Pending">Pending</option>
-          <option value="Approved">Approved</option>
-          <option value="Rejected">Rejected</option>
-        </select>
-      </div>
-
-      {filteredCourses.length === 0 ? (
-        <p>No courses found.</p>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-striped table-bordered">
-            <thead className="table-dark">
-              <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Teacher</th>
-                <th>Status</th>
-                <th>Price</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCourses.map((course) => (
-                <tr key={course._id}>
-                  <td>{course.title}</td>
-                  <td>{course.category}</td>
-                  <td>{course.teacherName || "N/A"}</td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        course.status === "Approved"
-                          ? "bg-success"
-                          : course.status === "Pending"
-                          ? "bg-warning text-dark"
-                          : "bg-danger"
-                      }`}
-                    >
-                      {course.status}
-                    </span>
-                  </td>
-                  <td>₹{course.price}</td>
-                  <td>{new Date(course.createdAt).toLocaleDateString()}</td>
-                  <td>
-                    {course.status === "Pending" && (
-                      <>
-                        <button
-                          className="btn btn-sm btn-success me-1"
-                          onClick={() => handleAction(course._id, "approve")}
-                        >
-                          Approve
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger me-1"
-                          onClick={() => handleAction(course._id, "reject")}
-                        >
-                          Reject
-                        </button>
-                      </>
-                    )}
-                    <button
-                      className="btn btn-sm btn-secondary me-1"
-                      onClick={() => alert("Edit feature coming soon")}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => handleDelete(course._id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+    <div className="container">
+      <h2>{course.title}</h2>
+      <img src={`http://localhost:5000/uploads/thumbnails/${course.thumbnail}`} alt={course.title} />
+      <p>{course.description}</p>
+      <h4>Chapters</h4>
+      <ul>
+        {course.chapters
+          .filter(ch => !ch.locked) // show only unlocked chapters for the student
+          .map((ch, idx) => (
+            <li key={idx}>
+              <strong>{ch.title}</strong>
+              {ch.videoUrl && (
+                <div>
+                  <a href={`http://localhost:5000${ch.videoUrl}`} target="_blank" rel="noreferrer">
+                    Watch Video
+                  </a>
+                </div>
+              )}
+              {ch.pdfUrl && (
+                <div>
+                  <a href={`http://localhost:5000${ch.pdfUrl}`} target="_blank" rel="noreferrer">
+                    Download PDF
+                  </a>
+                </div>
+              )}
+              <div>{ch.content}</div>
+              {/* Optionally: display quiz */}
+            </li>
+          ))}
+      </ul>
     </div>
   );
 }
 
-export default CourseManagement;
+export default CourseDetails;

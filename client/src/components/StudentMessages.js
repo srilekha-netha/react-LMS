@@ -1,50 +1,74 @@
-import React, { useState } from "react";
-import "./StudentDashboard.css";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 function StudentMessages() {
-  const [messages, setMessages] = useState([
-    { sender: "teacher", text: "Hi! Please submit the assignment by Friday." },
-    { sender: "student", text: "Sure, I'll complete it by tomorrow!" },
-    { sender: "teacher", text: "Also, check the updated quiz for Chapter 2." },
-  ]);
-  const [newMessage, setNewMessage] = useState("");
+  const [inbox, setInbox] = useState([]);
+  const [sent, setSent] = useState([]);
+  const [to, setTo] = useState("");
+  const [course, setCourse] = useState("");
+  const [content, setContent] = useState("");
+  const [courses, setCourses] = useState([]);
 
-  const handleSend = () => {
-    if (newMessage.trim() === "") return;
-    setMessages([...messages, { sender: "student", text: newMessage }]);
-    setNewMessage("");
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    axios.get(`http://localhost:5000/api/messages/inbox/${user._id}`).then(res => setInbox(res.data));
+    axios.get(`http://localhost:5000/api/messages/sent/${user._id}`).then(res => setSent(res.data));
+    axios.get(`http://localhost:5000/api/enrollments/byUser/${user._id}`).then(res => setCourses(res.data));
+  }, []);
+
+  const handleSend = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!to || !course || !content) return;
+    await axios.post("http://localhost:5000/api/messages/send", {
+      from: user._id,
+      to,
+      course,
+      content,
+    });
+    setContent("");
+    alert("Message sent!");
   };
 
   return (
-    <div className="message-container">
-      <h3 className="mb-3 text-center text-primary">📩 Teacher-Student Messages</h3>
-      <div className="message-box">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`message-bubble ${
-              msg.sender === "student" ? "student-msg" : "teacher-msg"
-            }`}
-          >
-            <span>{msg.text}</span>
-          </div>
-        ))}
-      </div>
-      <div className="message-input-area">
+    <div>
+      <h2>Messages</h2>
+      <div>
+        <h4>Send Message to Teacher</h4>
+        <select value={course} onChange={e => setCourse(e.target.value)}>
+          <option value="">Select Course</option>
+          {courses.map((en, i) => (
+            <option key={i} value={en.course._id}>{en.course.title}</option>
+          ))}
+        </select>
         <input
           type="text"
-          placeholder="Type your message..."
-          className="form-control"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          value={to}
+          placeholder="Teacher User ID"
+          onChange={e => setTo(e.target.value)}
         />
-        <button className="btn btn-primary ms-2" onClick={handleSend}>
-          Send
-        </button>
+        <input
+          type="text"
+          value={content}
+          placeholder="Your message"
+          onChange={e => setContent(e.target.value)}
+        />
+        <button onClick={handleSend}>Send</button>
+      </div>
+      <div>
+        <h4>Inbox</h4>
+        <ul>
+          {inbox.map((m, i) => (
+            <li key={i}><b>{m.from.name}</b>: {m.content}</li>
+          ))}
+        </ul>
+        <h4>Sent</h4>
+        <ul>
+          {sent.map((m, i) => (
+            <li key={i}><b>To {m.to.name}</b>: {m.content}</li>
+          ))}
+        </ul>
       </div>
     </div>
   );
 }
-
 export default StudentMessages;
