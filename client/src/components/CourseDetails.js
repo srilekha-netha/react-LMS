@@ -1,78 +1,75 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { useLocation } from "react-router-dom";
-import "./StudentDashboard.css"; // Custom CSS for styling
 
-const chaptersData = [
-  { id: 1, title: "Introduction to Node.js", quiz: true },
-  { id: 2, title: "Express Framework", quiz: true },
-  { id: 3, title: "REST APIs", quiz: true },
-  { id: 4, title: "Authentication & Authorization", quiz: true },
-];
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 
 function CourseDetails() {
-  const location = useLocation();
-  const courseTitle = location.state?.title || "Course Details";
+  const [course, setCourse] = useState(null);
+  const [enrollment, setEnrollment] = useState(null);
+  const [currentChapter, setCurrentChapter] = useState(0);
 
-  const [unlockedChapters, setUnlockedChapters] = useState([1]);
-  const [activeChapter, setActiveChapter] = useState(1);
-  const [completedQuizzes, setCompletedQuizzes] = useState([]);
+  const user = JSON.parse(localStorage.getItem("user"));
+  const query = useQuery();
+  const courseId = query.get("id");
 
-  const handleQuizCompletion = (chapterId) => {
-    if (!completedQuizzes.includes(chapterId)) {
-      setCompletedQuizzes([...completedQuizzes, chapterId]);
+  useEffect(() => {
+    axios.get(`http://localhost:5000/api/courses/${courseId}`)
+      .then(res => setCourse(res.data));
+    axios.get(`http://localhost:5000/api/enrollments/byUserAndCourse/${user._id}/${courseId}`)
+      .then(res => {
+        setEnrollment(res.data);
+        setCurrentChapter(res.data.chaptersUnlocked - 1);
+      });
+  }, [courseId, user._id]);
 
-      const nextChapter = chapterId + 1;
-      if (nextChapter <= chaptersData.length && !unlockedChapters.includes(nextChapter)) {
-        setUnlockedChapters([...unlockedChapters, nextChapter]);
-      }
-    }
+  const handleCompleteChapter = async (idx) => {
+    try {
+      await axios.post(`http://localhost:5000/api/enrollments/unlockChapter`, {
+        userId: user._id,
+        courseId,
+        chapterIndex: idx,
+      });
+      setCurrentChapter(idx + 1);
+    } catch (e) { alert("Failed"); }
   };
 
+  if (!course || !enrollment) return <div>Loading...</div>;
   return (
-    <div className="progress-container">
-      <aside className="chapter-sidebar">
-        <h5>Chapters</h5>
-        <ul className="chapter-list">
-          {chaptersData.map((chapter) => (
-            <li
-              key={chapter.id}
-              className={`chapter-item ${
-                activeChapter === chapter.id ? "active" : ""
-              } ${!unlockedChapters.includes(chapter.id) ? "locked" : ""}`}
-              onClick={() =>
-                unlockedChapters.includes(chapter.id) &&
-                setActiveChapter(chapter.id)
-              }
-            >
-              {chapter.title}
-              {!unlockedChapters.includes(chapter.id) && (
-                <span className="lock-icon">🔒</span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </aside>
-
-      <main className="chapter-content">
-        <h2 className="course-title">{courseTitle}</h2>
-        <h4>{chaptersData[activeChapter - 1].title}</h4>
-        <p>
-          This is the content for <strong>{chaptersData[activeChapter - 1].title}</strong>. 
-          Watch the video, read the content, and then complete the quiz to unlock the next chapter.
-        </p>
-
-        <button
-          className="btn btn-success"
-          disabled={completedQuizzes.includes(activeChapter)}
-          onClick={() => handleQuizCompletion(activeChapter)}
-        >
-          {completedQuizzes.includes(activeChapter)
-            ? "Quiz Completed ✅"
-            : "Complete Chapter Quiz"}
-        </button>
-      </main>
+    <div>
+      <h3>{course.title}</h3>
+      <div>
+        {course.chapters.map((chapter, idx) => (
+          <div key={idx} style={{
+            opacity: idx < enrollment.chaptersUnlocked ? 1 : 0.5,
+            background: idx === currentChapter ? "#def" : "#fff",
+            margin: 8,
+            padding: 8,
+            border: "1px solid #ccc"
+          }}>
+            <strong>Chapter {idx + 1}: {chapter.title}</strong>
+            <div>
+              {idx < enrollment.chaptersUnlocked
+                ? (
+                  <>
+                    <p>{chapter.content}</p>
+                    {chapter.videoUrl && <video controls src={chapter.videoUrl} width="300"></video>}
+                    {chapter.pdfUrl && <a href={chapter.pdfUrl} target="_blank" rel="noopener noreferrer">Download PDF</a>}
+                    {/* Quiz, Mark Complete logic here */}
+                    {idx === currentChapter &&
+                      <button onClick={() => handleCompleteChapter(idx)}>Mark as Complete</button>
+                    }
+                  </>
+                ) : (
+                  <span>Locked. Complete previous chapters to unlock.</span>
+                )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
-
 export default CourseDetails;

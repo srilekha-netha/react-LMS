@@ -1,96 +1,82 @@
-import React, { useState } from "react";
-import "./StudentDashboard";
-
-const quizzes = [
-  {
-    id: 1,
-    chapter: "Introduction to Node.js",
-    questions: [
-      {
-        question: "What is Node.js primarily used for?",
-        options: ["Mobile Development", "Machine Learning", "Server-side applications", "Database Design"],
-        correctAnswer: "Server-side applications",
-      },
-      {
-        question: "Node.js runs on which engine?",
-        options: ["JavaScriptCore", "V8", "SpiderMonkey", "Chakra"],
-        correctAnswer: "V8",
-      },
-    ],
-  },
-  {
-    id: 2,
-    chapter: "Express Framework",
-    questions: [
-      {
-        question: "What does `app.use()` do in Express?",
-        options: ["Defines a route", "Mounts middleware", "Starts server", "Creates a module"],
-        correctAnswer: "Mounts middleware",
-      },
-      {
-        question: "What is the default HTTP port?",
-        options: ["3000", "80", "5000", "8080"],
-        correctAnswer: "80",
-      },
-    ],
-  },
-];
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 function Quizzes() {
-  const [currentQuizIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
+  const [courses, setCourses] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [quiz, setQuiz] = useState([]);
+  const [answers, setAnswers] = useState([]);
   const [result, setResult] = useState(null);
 
-  const currentQuiz = quizzes[currentQuizIndex];
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    axios.get(`http://localhost:5000/api/enrollments/byUser/${user._id}`)
+      .then(res => setCourses(res.data));
+  }, []);
 
-  const handleOptionChange = (questionIndex, selectedOption) => {
-    setAnswers({ ...answers, [questionIndex]: selectedOption });
+  const handleSelect = async (course) => {
+    setSelected(course);
+    // Show first unlocked chapter with quiz
+    const ch = course.course.chapters.find((c, i) => i < course.chaptersUnlocked && c.quiz.length > 0);
+    setQuiz(ch ? ch.quiz : []);
+    setAnswers(new Array(ch ? ch.quiz.length : 0).fill(""));
+    setResult(null);
   };
 
-  const handleSubmit = () => {
-    let correct = 0;
-    currentQuiz.questions.forEach((q, index) => {
-      if (answers[index] === q.correctAnswer) correct++;
+  const handleChange = (idx, val) => {
+    const arr = [...answers];
+    arr[idx] = val;
+    setAnswers(arr);
+  };
+
+  const handleSubmit = async () => {
+    const chapterIdx = selected.course.chapters.findIndex((c, i) => i < selected.chaptersUnlocked && c.quiz.length > 0);
+    const res = await axios.post(`http://localhost:5000/api/courses/${selected.course._id}/submit-quiz/${chapterIdx}`, {
+      userId: JSON.parse(localStorage.getItem("user"))._id,
+      answers
     });
-    const scorePercent = (correct / currentQuiz.questions.length) * 100;
-    setResult(scorePercent >= 70 ? "Passed" : "Failed");
+    setResult(res.data);
   };
 
   return (
-    <div className="quiz-container">
-      <h2 className="quiz-title">📝 Quiz - {currentQuiz.chapter}</h2>
-
-      {currentQuiz.questions.map((q, idx) => (
-        <div key={idx} className="quiz-question">
-          <p>
-            <strong>Q{idx + 1}:</strong> {q.question}
-          </p>
-          {q.options.map((option, i) => (
-            <label key={i} className="quiz-option">
-              <input
-                type="radio"
-                name={`question-${idx}`}
-                value={option}
-                checked={answers[idx] === option}
-                onChange={() => handleOptionChange(idx, option)}
-              />
-              {option}
-            </label>
+    <div>
+      <h2>Quizzes</h2>
+      <ul>
+        {courses.map((en, i) => (
+          <li key={en._id}>
+            {en.course.title}
+            <button onClick={() => handleSelect(en)} style={{ marginLeft: 6 }}>Take Quiz</button>
+          </li>
+        ))}
+      </ul>
+      {quiz.length > 0 &&
+        <div>
+          <h4>Quiz for {selected.course.title}</h4>
+          {quiz.map((q, idx) => (
+            <div key={idx}>
+              <b>{q.question}</b>
+              {q.options.map((opt, j) =>
+                <div key={j}>
+                  <input
+                    type="radio"
+                    name={`q${idx}`}
+                    checked={answers[idx] === opt}
+                    onChange={() => handleChange(idx, opt)}
+                  /> {opt}
+                </div>
+              )}
+            </div>
           ))}
+          <button onClick={handleSubmit}>Submit Quiz</button>
+          {result && (
+            <div>
+              <p>Score: {result.score} / {result.total}</p>
+              <p>Percent: {result.percent}% {result.passed ? "(Passed)" : "(Failed)"}</p>
+            </div>
+          )}
         </div>
-      ))}
-
-      {!result ? (
-        <button className="submit-quiz-btn" onClick={handleSubmit}>
-          Submit Quiz
-        </button>
-      ) : (
-        <div className={`quiz-result ${result === "Passed" ? "passed" : "failed"}`}>
-          {result === "Passed" ? "✅ You passed! Next chapter unlocked." : "❌ You failed. Try again."}
-        </div>
-      )}
+      }
     </div>
   );
 }
-
 export default Quizzes;

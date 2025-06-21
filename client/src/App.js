@@ -6,6 +6,8 @@ import Register from "./components/Register";
 import TeacherLayout from "./components/TeacherLayout";
 import MyCourses from "./components/MyCourses";
 import CreateCourse from "./components/CreateCourse";
+import EditCourse from "./components/EditCourse";
+import CourseContentManager from "./components/CourseContentManager";
 import Assignments from "./components/Assignments";
 import Students from "./components/Students";
 import Messages from "./components/Messages";
@@ -83,8 +85,12 @@ function App() {
 
         {/* Nested routes under /teacher */}
         <Route path="/teacher" element={<TeacherLayout />}>
+            <Route index element={<MyCourses />} />
           <Route path="courses" element={<MyCourses />} />
           <Route path="create-course" element={<CreateCourse />} />
+          <Route path="courses" element={<MyCourses />} />
+<Route path="courses/:id/edit" element={<EditCourse />} />
+<Route path="courses/:id/content" element={<CourseContentManager />} />
           <Route path="assignments" element={<Assignments />} />
           <Route path="students" element={<Students />} />
           <Route path="messages" element={<Messages />} />
