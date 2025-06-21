@@ -4,6 +4,7 @@ const Course = require('../models/Course');
 const router = express.Router();
 const path = require("path");
 const fs = require('fs');
+const mongoose = require('mongoose'); // add this at the top if not present
 
 // Make sure folders exist
 ['uploads', 'uploads/thumbnails', 'uploads/chapter_files', 'uploads/others'].forEach(folder => {
@@ -112,11 +113,46 @@ router.get('/:id', async (req, res) => {
 });
 
 // ---------- Get all published courses (Explore) ----------
+// In routes/course.js
+// Assuming you have a User model with teacher info
+
+const User = require("../models/User"); // adjust path as needed
+
+// Published courses with instructor name
+
 router.get('/published', async (req, res) => {
+  console.log("====== /api/courses/published route START ======"); // <<<<<<<<<<<<
+
   try {
     const courses = await Course.find({ published: true });
-    res.json(courses);
+    console.log("Found courses:", courses.length);
+
+    const response = await Promise.all(courses.map(async course => {
+      let teacherName = "N/A";
+      try {
+        if (mongoose.Types.ObjectId.isValid(course.teacher)) {
+          const teacherUser = await User.findById(course.teacher).select("name");
+          if (teacherUser) teacherName = teacherUser.name;
+        }
+      } catch (e) {
+        console.error("Error fetching teacher for course", course._id, e);
+      }
+      return {
+        _id: course._id.toString(),
+        title: course.title,
+        description: course.description,
+        price: Number(course.price),
+        difficulty: course.difficulty,
+        thumbnail: course.thumbnail,
+        teacher: teacherName,
+        chapters: course.chapters,
+      };
+    }));
+
+    res.json(response);
   } catch (err) {
+    console.error("====== ERROR in /published route: ======"); // <<<<<<<<<<<<
+    console.error(err); // <<<<<<<<<<<< print the whole error
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
