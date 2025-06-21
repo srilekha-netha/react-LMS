@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "../App.css";
+import illustration from "../img/illustration.png";
 
 function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -17,11 +19,8 @@ function Login() {
       const res = await axios.post("http://localhost:5000/api/auth/login", form);
       const role = res.data.user.role;
       setMessage("Login successful!");
-
-      // Save user to localStorage (optional for sessions)
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      // Redirect based on role
       if (role === "student") navigate("/student");
       else if (role === "teacher") navigate("/teacher");
       else if (role === "admin") navigate("/admin");
@@ -31,15 +30,44 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
-      <form onSubmit={handleSubmit} className="login-card">
+    <div className="login-page">
+      <div className="login-left">
+        <img src={illustration} alt="Signup Illustration" />
+      </div>
+      <div className="login-right">
         <h2>Login</h2>
-        <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required />
-        <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required />
-        <button type="submit">Login</button>
-        <p className="message">{message}</p>
-        <p className="link-text">Don't have an account? <a href="/Register">Register</a></p>
-      </form>
+        <form onSubmit={handleSubmit}>
+          <label>Email</label>
+          <input
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+
+          <label>Password</label>
+          <input
+            type="password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
+
+          {message && (
+            <div className={`message ${message.toLowerCase().includes("failed") ? "error" : "success"}`}>
+              {message}
+            </div>
+          )}
+
+          <button type="submit">Login</button>
+
+          <p className="login-link">
+            Don’t have an account? <a href="/register">Register</a>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }
