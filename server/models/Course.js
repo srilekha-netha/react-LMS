@@ -23,7 +23,7 @@ const courseSchema = new mongoose.Schema({
   price: Number,
   thumbnail: String,
   published: { type: Boolean, default: false },
-  teacher: String, // store teacher id
+  teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
   chapters: [chapterSchema],
   createdAt: { type: Date, default: Date.now }
 });

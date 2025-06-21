@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import "./StudentDashboard.css"; 
 
 function ExploreCourses() {
   const [courses, setCourses] = useState([]);
@@ -7,10 +8,14 @@ function ExploreCourses() {
   const [applyMsg, setApplyMsg] = useState({});
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/courses/published")
-      .then(res => setCourses(res.data))
-      .catch(() => setCourses([]));
-  }, []);
+  axios.get("http://localhost:5000/api/courses/published")
+    .then(res => {
+      console.log('Courses:', res.data); // <--- Add this
+      setCourses(res.data);
+    })
+    .catch(() => setCourses([]));
+}, []);
+
 
   const handleCouponChange = (id, value) => {
     setCoupon({ ...coupon, [id]: value });
@@ -29,10 +34,8 @@ function ExploreCourses() {
     }
   };
 
-  const enrollCourse = async (courseId, price, idx) => {
-    // Here you would integrate a payment gateway in real app
+  const enrollCourse = async (courseId, price) => {
     try {
-      // Simulate payment: always succeed
       const userId = JSON.parse(localStorage.getItem("user"))._id;
       await axios.post("http://localhost:5000/api/enrollments/enroll", {
         courseId,
@@ -48,29 +51,43 @@ function ExploreCourses() {
   return (
     <div>
       <h2>Explore Courses</h2>
-      {courses.map((course, idx) => (
-        <div key={course._id} style={{ border: "1px solid #ddd", margin: 12, padding: 16, borderRadius: 6 }}>
-          <h5>{course.title}</h5>
-          <p>{course.description}</p>
-          <div>Instructor: {course.teacher?.name || "N/A"}</div>
-          <div>Duration: {course.chapters.length} chapters</div>
-          <div>Level: {course.difficulty}</div>
-          <div>Price: ₹{course.price}</div>
-          <input
-            type="text"
-            placeholder="Coupon code"
-            value={coupon[course._id] || ""}
-            onChange={e => handleCouponChange(course._id, e.target.value)}
-            style={{ marginRight: 6 }}
-          />
-          <button onClick={() => applyCoupon(course._id)}>Apply Coupon</button>
-          <span>{applyMsg[course._id]}</span>
-          <button style={{ marginLeft: 16 }} onClick={() => enrollCourse(course._id, course.price, idx)}>
-            Enroll
-          </button>
-        </div>
-      ))}
+      <div className="courses-list">
+        {courses.length === 0 && <div>No courses found.</div>}
+        {courses.map((course) => (
+          <div key={course._id} className="course-card">
+            {course.thumbnail && (
+              <img
+                src={`http://localhost:5000/uploads/thumbnails/${course.thumbnail}`}
+                alt="Course Thumbnail"
+                className="course-thumb"
+              />
+            )}
+            <h4>{course.title}</h4>
+            <div className="course-meta">
+              <span><b>Instructor:</b> {course.teacher}</span>
+              <span><b>Level:</b> {course.difficulty}</span>
+              <span><b>Duration:</b> {course.chapters ? `${course.chapters.length} Chapters` : "N/A"}</span>
+            </div>
+            <p>{course.description}</p>
+            <div><b>Price:</b> ₹{course.price}</div>
+            <div className="coupon-box">
+              <input
+                type="text"
+                placeholder="Coupon code"
+                value={coupon[course._id] || ""}
+                onChange={e => handleCouponChange(course._id, e.target.value)}
+              />
+              <button onClick={() => applyCoupon(course._id)}>Apply Coupon</button>
+              <span>{applyMsg[course._id]}</span>
+            </div>
+            <button className="enroll-btn" onClick={() => enrollCourse(course._id, course.price)}>
+              Enroll
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
+
 export default ExploreCourses;

@@ -1061,3 +1061,44 @@ background: linear-gradient(90deg, #a21caf 0%, #7c3aed 100%) !important;  displa
     min-height: 82vh;
   }
 }
+.courses-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.course-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px;
+  width: 320px;
+  box-shadow: 0 2px 8px #eee;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.course-thumb {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+.course-meta {
+  font-size: 0.9em;
+  margin-bottom: 8px;
+  color: #333;
+  display: flex;
+  gap: 14px;
+}
+.coupon-box {
+  margin: 10px 0;
+}
+.enroll-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 22px;
+  cursor: pointer;
+  margin-top: 10px;
+}

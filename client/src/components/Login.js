@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
-import illustration from "../img/illustration.png";
+import loginimage from "../img/loginimage.jpg";
 
 function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -10,31 +10,27 @@ function Login() {
   const navigate = useNavigate();
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await axios.post("http://localhost:5000/api/auth/login", form);
+    const role = res.data.user.role;
+    setMessage("Login successful!");
+    localStorage.setItem("user", JSON.stringify(res.data.user));
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", form);
-      const role = res.data.user.role;
-<<<<<<< HEAD
-      setMessage("Login successful!");
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+    if (role === "student") navigate("/student");
+    else if (role === "teacher") navigate("/teacher");
+    else if (role === "admin") navigate("/admin");
+  } catch (err) {
+    setMessage(err.response?.data?.message || "Login failed");
+  }
+};
 
-=======
-      localStorage.setItem("user", JSON.stringify(res.data.user));
->>>>>>> origin/Spandana
-      if (role === "student") navigate("/student");
-      else if (role === "teacher") navigate("/teacher");
-      else if (role === "admin") navigate("/admin");
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Login failed");
-    }
-  };
 
   return (
     <div className="login-page">
       <div className="login-left">
-        <img src={illustration} alt="Signup Illustration" />
+        <img src={loginimage} alt="Signup Login_image" />
       </div>
       <div className="login-right">
         <h2>Login</h2>
