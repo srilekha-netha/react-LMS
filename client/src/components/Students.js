@@ -1,59 +1,54 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 function Students() {
   const [students, setStudents] = useState([]);
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
-    // Dummy data – Replace with actual API call later
-    const dummyStudents = [
-      {
-        id: 1,
-        name: "Ananya Sharma",
-        course: "React Essentials",
-        progress: "80%",
-        quizzes: "4/5",
-      },
-      {
-        id: 2,
-        name: "Kiran Reddy",
-        course: "JavaScript Basics",
-        progress: "100%",
-        quizzes: "5/5",
-      },
-    ];
-    setStudents(dummyStudents);
-  }, []);
+    if (!user || !user._id) return;
 
-  const sendMessage = (name) => {
-    alert(`Message sent to ${name} (simulated)`);
-  };
+    axios
+      .get(`http://localhost:5000/api/enrollments/byTeacher/${user._id}`)
+      .then((res) => {
+        const formatted = res.data.map((enr, index) => ({
+          id: index + 1,
+          name: enr.student?.name || "Unknown",
+          course: enr.course?.title || "Unknown",
+          progress: `${enr.chaptersUnlocked || 0} / ${enr.course?.chapters?.length || 0}`,
+          quizzes: "-", // Placeholder if quiz data is not available
+        }));
+        setStudents(formatted);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch enrolled students", err);
+      });
+  }, [user]);
 
   return (
-    <div>
-      <h2>Enrolled Students</h2>
+    <div className="container py-4">
+      <h2 className="mb-4 fw-bold">Enrolled Students</h2>
       {students.length === 0 ? (
-        <p>No students enrolled yet.</p>
+        <div className="alert alert-info">No students enrolled yet.</div>
       ) : (
-        <table border="1" cellPadding="10">
+        <table className="table table-striped">
           <thead>
             <tr>
-              <th>Name</th>
+              <th>#</th>
+              <th>Student</th>
               <th>Course</th>
               <th>Progress</th>
               <th>Quizzes</th>
-              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {students.map((s) => (
               <tr key={s.id}>
+                <td>{s.id}</td>
                 <td>{s.name}</td>
                 <td>{s.course}</td>
                 <td>{s.progress}</td>
                 <td>{s.quizzes}</td>
-                <td>
-                  <button onClick={() => sendMessage(s.name)}>Send Feedback</button>
-                </td>
               </tr>
             ))}
           </tbody>

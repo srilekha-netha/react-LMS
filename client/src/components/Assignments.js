@@ -10,6 +10,7 @@ function Assignments() {
     ];
     setAssignments(dummyAssignments);
   }, []);
+  
 
   const handleGrade = (id) => {
     setAssignments((prev) =>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "./StudentDashboard.css"; // Import the external CSS
+import "./StudentDashboard.css"; // External CSS
 
 function CreateCourse() {
   const [form, setForm] = useState({
@@ -11,8 +11,9 @@ function CreateCourse() {
     difficulty: "Beginner",
     price: "",
     thumbnail: null,
-    published: false
+    published: true
   });
+
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [thumbPreview, setThumbPreview] = useState(null);
@@ -24,11 +25,7 @@ function CreateCourse() {
     const { name, value, type, checked, files } = e.target;
     if (type === "file") {
       setForm({ ...form, [name]: files[0] });
-      if (files[0]) {
-        setThumbPreview(URL.createObjectURL(files[0]));
-      } else {
-        setThumbPreview(null);
-      }
+      setThumbPreview(files[0] ? URL.createObjectURL(files[0]) : null);
     } else if (type === "checkbox") {
       setForm({ ...form, [name]: checked });
     } else {
@@ -42,6 +39,7 @@ function CreateCourse() {
       setMsg("Please fill all required fields.");
       return;
     }
+
     setLoading(true);
     try {
       const formData = new FormData();
@@ -50,12 +48,12 @@ function CreateCourse() {
           formData.append(key, form[key]);
         }
       });
-      // Add teacher id
       formData.append("teacher", user._id);
 
       await axios.post("http://localhost:5000/api/courses/create", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
+
       setMsg("Course created successfully!");
       setTimeout(() => navigate("/teacher/courses"), 1000);
     } catch (err) {
@@ -84,6 +82,7 @@ function CreateCourse() {
                 autoFocus
               />
             </div>
+
             <div className="form-group mb-3">
               <label className="form-label fw-medium">Description<span className="text-danger">*</span></label>
               <textarea
@@ -97,6 +96,7 @@ function CreateCourse() {
                 style={{ resize: "vertical" }}
               />
             </div>
+
             <div className="row g-2">
               <div className="col-md-6">
                 <label className="form-label fw-medium">Category<span className="text-danger">*</span></label>
@@ -125,6 +125,7 @@ function CreateCourse() {
                 </select>
               </div>
             </div>
+
             <div className="row g-2 mt-2">
               <div className="col-md-6">
                 <label className="form-label fw-medium">Price (₹)<span className="text-danger">*</span></label>
@@ -156,7 +157,8 @@ function CreateCourse() {
               </div>
             </div>
           </div>
-          {/* Thumbnail preview/upload on right for desktop, above for mobile */}
+
+          {/* Thumbnail upload and preview */}
           <div className="col-12 col-md-4 d-flex flex-column align-items-center">
             <label className="form-label fw-medium">Thumbnail Image</label>
             <div className="thumb-preview-area mb-2">
@@ -176,15 +178,13 @@ function CreateCourse() {
             <small className="text-muted mt-1">Best size: 16:9 or 4:3</small>
           </div>
         </div>
+
         <div className="mt-4 d-flex gap-3 justify-content-end">
-          <button
-            type="submit"
-            className="btn btn-lg btn-primary create-course-btn"
-            disabled={loading}
-          >
+          <button type="submit" className="btn btn-lg btn-primary create-course-btn" disabled={loading}>
             {loading ? "Creating..." : "Create Course"}
           </button>
         </div>
+
         {msg && (
           <div className={`alert mt-3 mb-0 ${msg.startsWith("Error") ? "alert-danger" : "alert-success"}`}>
             {msg}

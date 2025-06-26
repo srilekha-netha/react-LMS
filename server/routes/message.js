@@ -1,34 +1,47 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const router = express.Router();
+const Message = require("../models/Message");
 
-const messageSchema = new mongoose.Schema({
-  from: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  to: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
-  content: String,
-  createdAt: { type: Date, default: Date.now },
-});
-const Message = mongoose.model("Message", messageSchema);
-
-// Get all messages for a user (inbox)
-router.get("/inbox/:userId", async (req, res) => {
-  const msgs = await Message.find({ to: req.params.userId }).populate("from");
-  res.json(msgs);
-});
-
-// Get all messages sent by user
-router.get("/sent/:userId", async (req, res) => {
-  const msgs = await Message.find({ from: req.params.userId }).populate("to");
-  res.json(msgs);
-});
-
-// Send a message (student to teacher)
+// ✅ Send a message
 router.post("/send", async (req, res) => {
-  const { from, to, course, content } = req.body;
-  const m = new Message({ from, to, course, content });
-  await m.save();
-  res.json({ message: "Message sent" });
+  const { from, to, content } = req.body;
+  if (!from || !to || !content) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  try {
+    const msg = await Message.create({ from, to, content });
+    res.status(201).json(msg);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to send message" });
+  }
+});
+
+
+// ✅ Get inbox messages
+router.get("/inbox/:userId", async (req, res) => {
+  try {
+    const msgs = await Message.find({ to: req.params.userId })
+      .populate("from", "name email") // populate only necessary fields
+      .sort({ createdAt: -1 });
+    res.json(msgs);
+  } catch (err) {
+    console.error("❌ Error fetching inbox:", err.message);
+    res.status(500).json({ message: "Failed to fetch inbox messages" });
+  }
+});
+
+// ✅ Get sent messages
+router.get("/sent/:userId", async (req, res) => {
+  try {
+    const msgs = await Message.find({ from: req.params.userId })
+      .populate("to", "name email")
+      .sort({ createdAt: -1 });
+    res.json(msgs);
+  } catch (err) {
+    console.error("❌ Error fetching sent messages:", err.message);
+    res.status(500).json({ message: "Failed to fetch sent messages" });
+  }
 });
 
 module.exports = router;

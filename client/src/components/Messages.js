@@ -1,70 +1,105 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 function Messages() {
+  const [to, setTo] = useState("");
+  const [content, setContent] = useState("");
+  const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
+
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
-    // Dummy messages – replace with real-time or API call
-    const dummyMessages = [
-      { id: 1, from: "Student", content: "Can you extend the deadline?" },
-      { id: 2, from: "Teacher", content: "Sure, you have 2 more days." },
-    ];
-    setMessages(dummyMessages);
-  }, []);
+    if (!user || !user._id) return;
 
-  const handleSend = () => {
-    if (!newMessage.trim()) return;
-    const msg = {
-      id: messages.length + 1,
-      from: "Teacher",
-      content: newMessage.trim(),
-    };
-    setMessages([...messages, msg]);
-    setNewMessage("");
+    // ✅ Load users excluding self
+   axios.get("http://localhost:5000/api/users")
+  .then((res) => {
+    if (!user || !user._id) return;
+    const filtered = res.data.filter(u => u._id !== user._id && u.role === "student");
+    setUsers(filtered);
+  })
+  .catch(err => {
+    console.error("Failed to fetch users", err);
+  });
+
+
+
+    // ✅ Load inbox
+    axios.get(`http://localhost:5000/api/messages/inbox/${user._id}`)
+      .then(res => setMessages(res.data.reverse()))
+      .catch(err => console.error("❌ Failed to load messages", err));
+  }, [user]);
+
+  const handleSend = async () => {
+    if (!to || !content.trim()) {
+      alert("Please select user and enter message.");
+      return;
+    }
+
+    try {
+      await axios.post("http://localhost:5000/api/messages/send", {
+        from: user._id,
+        to,
+        content
+      });
+
+      alert("✅ Message sent!");
+      setContent("");
+
+      // Refresh messages
+      const updated = await axios.get(`http://localhost:5000/api/messages/inbox/${user._id}`);
+      setMessages(updated.data.reverse());
+    } catch (err) {
+      alert("❌ Failed to send message");
+      console.error("Axios POST error:", err);
+    }
   };
 
   return (
-    <div className="container-fluid">
-      <h2 className="my-4">Messages</h2>
+    <div className="container py-4">
+      <h2 className="mb-4">Messages</h2>
 
-      {/* Message Box */}
-      <div className="card mb-3" style={{ maxWidth: "600px" }}>
-        <div className="card-body" style={{ maxHeight: "300px", overflowY: "auto" }}>
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`d-flex mb-2 ${msg.from === "Teacher" ? "justify-content-end" : "justify-content-start"}`}
-            >
-              <div
-                className={`p-2 rounded ${
-                  msg.from === "Teacher" ? "bg-primary text-white" : "bg-light"
-                }`}
-                style={{ maxWidth: "70%" }}
-              >
-                <small className="text-muted">{msg.from}</small>
-                <p className="mb-0">{msg.content}</p>
-              </div>
-            </div>
+      <div className="mb-3">
+        <label>Send To:</label>
+        <select className="form-select" value={to} onChange={(e) => setTo(e.target.value)}>
+          <option value="">-- Select User --</option>
+          {users.map(u => (
+            <option key={u._id} value={u._id}>
+              {u.name} ({u.role})
+            </option>
           ))}
-        </div>
+        </select>
       </div>
 
-      {/* Input Box */}
-      <div className="d-flex flex-column" style={{ maxWidth: "600px" }}>
+      <div className="mb-3">
+        <label>Message:</label>
         <textarea
-          className="form-control mb-2"
-          placeholder="Type your message..."
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
+          className="form-control"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
           rows="3"
+          placeholder="Write your message..."
         />
-        <div className="text-end">
-          <button className="btn btn-primary" onClick={handleSend}>
-            Send
-          </button>
-        </div>
       </div>
+
+      <button className="btn btn-primary mb-4" onClick={handleSend}>
+        Send Message
+      </button>
+
+      <hr />
+      <h5>Inbox</h5>
+      <ul className="list-group">
+        {messages.length === 0 ? (
+          <li className="list-group-item text-muted">No messages received.</li>
+        ) : (
+          messages.map((msg, i) => (
+            <li key={i} className="list-group-item">
+              <strong>{msg.from?.name || "Unknown"}:</strong> {msg.content}
+            </li>
+          ))
+        )}
+      </ul>
     </div>
   );
 }

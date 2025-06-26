@@ -11,72 +11,95 @@ function Quizzes() {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     axios.get(`http://localhost:5000/api/enrollments/byUser/${user._id}`)
-      .then(res => setCourses(res.data));
+      .then(res => {
+        const valid = res.data.filter(en => en.course !== null); // ✅ filter null courses
+        setCourses(valid);
+      });
   }, []);
 
-  const handleSelect = async (course) => {
-    setSelected(course);
-    // Show first unlocked chapter with quiz
-    const ch = course.course.chapters.find((c, i) => i < course.chaptersUnlocked && c.quiz.length > 0);
-    setQuiz(ch ? ch.quiz : []);
-    setAnswers(new Array(ch ? ch.quiz.length : 0).fill(""));
+  const handleSelect = async (enrollment) => {
+    setSelected(enrollment);
+    const chapter = enrollment.course.chapters.find((c, i) =>
+      i < enrollment.chaptersUnlocked && c.quiz.length > 0
+    );
+    if (chapter) {
+      setQuiz(chapter.quiz);
+      setAnswers(new Array(chapter.quiz.length).fill(""));
+    } else {
+      setQuiz([]);
+    }
     setResult(null);
   };
 
   const handleChange = (idx, val) => {
-    const arr = [...answers];
-    arr[idx] = val;
-    setAnswers(arr);
+    const updated = [...answers];
+    updated[idx] = val;
+    setAnswers(updated);
   };
 
   const handleSubmit = async () => {
-    const chapterIdx = selected.course.chapters.findIndex((c, i) => i < selected.chaptersUnlocked && c.quiz.length > 0);
-    const res = await axios.post(`http://localhost:5000/api/courses/${selected.course._id}/submit-quiz/${chapterIdx}`, {
-      userId: JSON.parse(localStorage.getItem("user"))._id,
-      answers
-    });
+    const chapterIdx = selected.course.chapters.findIndex((c, i) =>
+      i < selected.chaptersUnlocked && c.quiz.length > 0
+    );
+    const res = await axios.post(
+      `http://localhost:5000/api/courses/${selected.course._id}/submit-quiz/${chapterIdx}`,
+      {
+        userId: JSON.parse(localStorage.getItem("user"))._id,
+        answers
+      }
+    );
     setResult(res.data);
   };
 
   return (
-    <div>
-      <h2>Quizzes</h2>
-      <ul>
-        {courses.map((en, i) => (
-          <li key={en._id}>
-            {en.course.title}
-            <button onClick={() => handleSelect(en)} style={{ marginLeft: 6 }}>Take Quiz</button>
-          </li>
-        ))}
+    <div className="container py-4">
+      <h2 className="mb-4 fw-bold">Quizzes</h2>
+
+      <ul className="list-group mb-4">
+        {courses.length === 0 ? (
+          <li className="list-group-item text-muted">No courses with quizzes available</li>
+        ) : (
+          courses.map((en) => (
+            <li key={en._id} className="list-group-item d-flex justify-content-between align-items-center">
+              <span>{en.course?.title || "Untitled Course"}</span>
+              <button className="btn btn-sm btn-outline-primary" onClick={() => handleSelect(en)}>Take Quiz</button>
+            </li>
+          ))
+        )}
       </ul>
-      {quiz.length > 0 &&
-        <div>
-          <h4>Quiz for {selected.course.title}</h4>
+
+      {quiz.length > 0 && selected && (
+        <div className="card p-3">
+          <h4 className="mb-3">Quiz for {selected.course?.title || "Course"}</h4>
           {quiz.map((q, idx) => (
-            <div key={idx}>
-              <b>{q.question}</b>
-              {q.options.map((opt, j) =>
-                <div key={j}>
+            <div key={idx} className="mb-3">
+              <strong>{q.question}</strong>
+              {q.options.map((opt, j) => (
+                <div key={j} className="form-check">
                   <input
                     type="radio"
                     name={`q${idx}`}
+                    id={`q${idx}_opt${j}`}
+                    className="form-check-input"
                     checked={answers[idx] === opt}
                     onChange={() => handleChange(idx, opt)}
-                  /> {opt}
+                  />
+                  <label htmlFor={`q${idx}_opt${j}`} className="form-check-label">{opt}</label>
                 </div>
-              )}
+              ))}
             </div>
           ))}
-          <button onClick={handleSubmit}>Submit Quiz</button>
+          <button className="btn btn-success" onClick={handleSubmit}>Submit Quiz</button>
           {result && (
-            <div>
-              <p>Score: {result.score} / {result.total}</p>
-              <p>Percent: {result.percent}% {result.passed ? "(Passed)" : "(Failed)"}</p>
+            <div className="alert mt-3" style={{ background: result.passed ? "#d4edda" : "#f8d7da" }}>
+              <p><strong>Score:</strong> {result.score} / {result.total}</p>
+              <p><strong>Percent:</strong> {result.percent}% {result.passed ? "(Passed)" : "(Failed)"}</p>
             </div>
           )}
         </div>
-      }
+      )}
     </div>
   );
 }
+
 export default Quizzes;

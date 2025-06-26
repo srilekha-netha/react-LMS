@@ -23,7 +23,15 @@ const courseSchema = new mongoose.Schema({
   price: Number,
   thumbnail: String,
   published: { type: Boolean, default: false },
-  teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
+  teacher: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    validate: {
+      validator: (value) => mongoose.Types.ObjectId.isValid(value),
+      message: 'Invalid teacher ID'
+    }
+  },
   chapters: [chapterSchema],
   createdAt: { type: Date, default: Date.now }
 });

@@ -10,15 +10,17 @@ function Profile() {
   });
 
   useEffect(() => {
-    // Dummy fetch – Replace with actual API data
-    const dummyProfile = {
-      name: "Ms. Priya Verma",
-      email: "priya.verma@lms.com",
-      bio: "Experienced web development trainer.",
-      expertise: "React, JavaScript, HTML/CSS",
-      password: "",
-    };
-    setProfile(dummyProfile);
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    if (user && user.name && user.email) {
+      setProfile({
+        name: user.name || "",
+        email: user.email || "",
+        bio: user.bio || "",
+        expertise: user.expertise || "",
+        password: "",
+      });
+    }
   }, []);
 
   const handleChange = (e) => {
@@ -27,7 +29,7 @@ function Profile() {
 
   const handleUpdate = (e) => {
     e.preventDefault();
-    // TODO: Send update to API
+    // Optional: Save to API or localStorage (demo purpose)
     alert("Profile updated successfully!");
   };
 
@@ -64,6 +66,7 @@ function Profile() {
                 value={profile.email}
                 onChange={handleChange}
                 required
+                readOnly // Disable email change if you want
               />
             </div>
 

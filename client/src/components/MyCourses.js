@@ -17,13 +17,27 @@ function MyCourses() {
   }, [user._id]);
 
   const handleDelete = async (id) => {
-    if (window.confirm("Delete this course?")) {
+  console.log("📛 Deleting course ID:", id, typeof id); // <-- Debug ID type too
+
+  if (!id) {
+    alert("Invalid course ID");
+    return;
+  }
+
+  if (window.confirm("Delete this course?")) {
+    try {
       await axios.delete(`http://localhost:5000/api/courses/${id}`);
-      if (!user._id) return;
+      alert("Course deleted!");
+      const user = JSON.parse(localStorage.getItem("user"));
       const res = await axios.get(`http://localhost:5000/api/courses/teacher/${user._id}`);
       setCourses(res.data);
+    } catch (err) {
+      console.error("❌ Delete failed:", err.response?.data || err.message);
+      alert("Failed to delete course");
     }
-  };
+  }
+};
+
 
   return (
     <div className="container py-4">
