@@ -1,90 +1,77 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 function Assignments() {
   const [assignments, setAssignments] = useState([]);
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
-    const dummyAssignments = [
-      { id: 1, student: "Asha R.", course: "React", file: "assignment1.pdf", status: "Submitted" },
-      { id: 2, student: "Raj M.", course: "JS Basics", file: "assignment2.pdf", status: "Graded" },
-    ];
-    setAssignments(dummyAssignments);
-  }, []);
-  
+    if (!user?._id) return;
 
-  const handleGrade = (id) => {
-    setAssignments((prev) =>
-      prev.map((a) =>
-        a.id === id ? { ...a, status: "Graded" } : a
-      )
-    );
-    alert(`Assignment ${id} marked as graded.`);
+    axios.get(`http://localhost:5000/api/assignments/byTeacher/${user._id}`)
+      .then(res => setAssignments(res.data || []))
+      .catch(err => console.error("❌ Fetch error", err));
+  }, [user]);
+
+  const handleGrade = async (id, grade = "A") => {
+    try {
+      await axios.post(`http://localhost:5000/api/assignments/grade/${id}`, { grade });
+
+      setAssignments((prev) =>
+        prev.map((a) =>
+          a._id === id ? { ...a, status: "Graded", grade } : a
+        )
+      );
+      alert("✅ Graded successfully");
+    } catch (err) {
+      console.error("❌ Grade error", err);
+    }
   };
 
   return (
-    <div className="container-fluid">
-      <h2 className="my-4">Submitted Assignments</h2>
+    <div className="container py-4">
+      <h2 className="mb-4 fw-bold">📥 Submitted Assignments</h2>
 
       {assignments.length === 0 ? (
-        <div className="alert alert-info">No assignments submitted yet.</div>
+        <div className="alert alert-info">No assignments yet.</div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-striped table-bordered align-middle">
-            <thead className="table-dark">
-              <tr>
-                <th>Student</th>
-                <th>Course</th>
-                <th>File</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assignments.map((a) => (
-                <tr key={a.id}>
-                  <td>{a.student}</td>
-                  <td>{a.course}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className="btn btn-link p-0"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        // TODO: handle actual file download or preview
-                      }}
+        <div className="row">
+          {assignments.map((a, i) => (
+            <div key={i} className="col-md-6">
+              <div className="card mb-3 shadow-sm">
+                <div className="card-body">
+                  <h5 className="card-title">{a.course?.title}</h5>
+                  <p><strong>👤 Student:</strong> {a.student?.name}</p>
+                  <p><strong>📘 Chapter:</strong> {a.chapter}</p>
+                  <p><strong>📄 File:</strong> 
+                    <a
+                      href={`http://localhost:5000${a.fileUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ms-1"
                     >
-                      {a.file}
-                    </button>
-                  </td>
-                  <td>
-                    <span
-                      className={
-                        a.status === "Graded"
-                          ? "badge bg-success"
-                          : "badge bg-warning text-dark"
-                      }
-                    >
+                      View PDF
+                    </a>
+                  </p>
+                  <p><strong>Status:</strong>{" "}
+                    <span className={`badge ${a.status === "Graded" ? "bg-success" : "bg-warning text-dark"}`}>
                       {a.status}
                     </span>
-                  </td>
-                  <td>
-                    {a.status !== "Graded" ? (
-                      <button
-                        className="btn btn-sm btn-primary"
-                        onClick={() => handleGrade(a.id)}
-                      >
-                        Mark as Graded
-                      </button>
-                    ) : (
-                      <button className="btn btn-sm btn-secondary" disabled>
-                        Graded
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </p>
+                  <p><strong>Grade:</strong> {a.grade || "N/A"}</p>
+                  {a.status !== "Graded" ? (
+                    <button className="btn btn-primary btn-sm" onClick={() => handleGrade(a._id, "A")}>
+                      ✅ Mark as Graded (A)
+                    </button>
+                  ) : (
+                    <button className="btn btn-secondary btn-sm" disabled>
+                      Graded
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

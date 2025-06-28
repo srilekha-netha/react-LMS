@@ -9,17 +9,18 @@ function CourseContentManager() {
   const [chapters, setChapters] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
+  const [showAssignment, setShowAssignment] = useState(false);
   const [chapterForm, setChapterForm] = useState({
     title: "",
     content: "",
     video: null,
     pdf: null,
-    quiz: [{ question: "", options: ["", "", "", ""], answer: "" }]
+    quiz: [{ question: "", options: ["", "", "", ""], answer: "" }],
+    assignment: ""
   });
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Fetch course and chapters
   useEffect(() => {
     axios.get(`http://localhost:5000/api/courses/${id}`).then(res => {
       setCourse(res.data);
@@ -27,7 +28,6 @@ function CourseContentManager() {
     });
   }, [id]);
 
-  // Input change handlers
   const handleChapterChange = (e) => {
     const { name, value, type, files } = e.target;
     setChapterForm({
@@ -36,13 +36,13 @@ function CourseContentManager() {
     });
   };
 
-  // Quiz logic
   const handleQuizChange = (idx, field, value) => {
     const updatedQuiz = chapterForm.quiz.map((q, i) =>
       i === idx ? { ...q, [field]: value } : q
     );
     setChapterForm({ ...chapterForm, quiz: updatedQuiz });
   };
+
   const handleQuizOptionChange = (qIdx, oIdx, value) => {
     const updatedQuiz = chapterForm.quiz.map((q, i) => {
       if (i === qIdx) {
@@ -53,6 +53,7 @@ function CourseContentManager() {
     });
     setChapterForm({ ...chapterForm, quiz: updatedQuiz });
   };
+
   const addQuizQuestion = () => {
     setChapterForm({
       ...chapterForm,
@@ -60,7 +61,6 @@ function CourseContentManager() {
     });
   };
 
-  // Add chapter
   const handleAddChapter = async (e) => {
     e.preventDefault();
     const formData = new FormData();
@@ -69,6 +69,7 @@ function CourseContentManager() {
     if (chapterForm.video) formData.append("video", chapterForm.video);
     if (chapterForm.pdf) formData.append("pdf", chapterForm.pdf);
     if (showQuiz) formData.append("quiz", JSON.stringify(chapterForm.quiz));
+    if (showAssignment) formData.append("assignmentQuestion", chapterForm.assignment); // ✅ FIXED
 
     try {
       const res = await axios.post(
@@ -82,12 +83,14 @@ function CourseContentManager() {
         content: "",
         video: null,
         pdf: null,
-        quiz: [{ question: "", options: ["", "", "", ""], answer: "" }]
+        quiz: [{ question: "", options: ["", "", "", ""] },],
+        assignment: ""
       });
       setMessage("✅ Chapter added successfully!");
       setSuccess(true);
       setShowAdd(false);
       setShowQuiz(false);
+      setShowAssignment(false);
       setTimeout(() => setMessage(""), 2500);
     } catch (err) {
       setMessage("❌ Error: " + (err.response?.data?.message || err.message));
@@ -102,14 +105,13 @@ function CourseContentManager() {
         <span className="text-primary">{course.title || "..."}</span>
         <span className="fs-6 text-muted ms-2">({chapters.length} Chapters)</span>
       </h3>
-      {/* Course Update Message */}
+
       {message && (
         <div className={`alert content-mgr-msg ${success ? "alert-success" : "alert-danger"} mb-3`}>
           {message}
         </div>
       )}
 
-      {/* Chapters List */}
       <ul className="list-group mb-4 shadow-sm">
         {chapters.map((ch, idx) => (
           <li className="list-group-item content-mgr-chapter" key={idx}>
@@ -118,38 +120,35 @@ function CourseContentManager() {
                 <strong>{ch.title}</strong>
                 {ch.videoUrl && (
                   <span className="ms-2">
-                    <a
-                      href={`http://localhost:5000${ch.videoUrl}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="content-mgr-link"
-                    >
+                    <a href={`http://localhost:5000${ch.videoUrl}`} target="_blank" rel="noreferrer" className="content-mgr-link">
                       <i className="bi bi-play-circle-fill me-1"></i>Video
                     </a>
                   </span>
                 )}
                 {ch.pdfUrl && (
                   <span className="ms-2">
-                    <a
-                      href={`http://localhost:5000${ch.pdfUrl}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="content-mgr-link"
-                    >
+                    <a href={`http://localhost:5000${ch.pdfUrl}`} target="_blank" rel="noreferrer" className="content-mgr-link">
                       <i className="bi bi-file-earmark-pdf-fill me-1"></i>PDF
                     </a>
                   </span>
                 )}
               </div>
-              <span
-                className={`badge content-mgr-badge px-3 py-1 ${
-                  ch.locked ? "bg-warning text-dark" : "bg-success"
-                }`}
-              >
+              <span className={`badge content-mgr-badge px-3 py-1 ${ch.locked ? "bg-warning text-dark" : "bg-success"}`}>
                 {ch.locked ? "Locked" : "Unlocked"}
               </span>
             </div>
+
             <div className="content-mgr-content mb-2">{ch.content}</div>
+
+            {ch.assignmentQuestion && (
+              <div>
+                <b className="me-2">📝 Assignment:</b>
+                <ul className="ps-3">
+                  <li>{ch.assignmentQuestion}</li>
+                </ul>
+              </div>
+            )}
+
             <div>
               <b className="me-2">Quiz:</b>
               <ul className="ps-3">
@@ -162,7 +161,6 @@ function CourseContentManager() {
         ))}
       </ul>
 
-      {/* Add Chapter Button */}
       <div className="d-flex justify-content-center mb-4">
         <button
           className={`btn btn-lg btn-primary px-5 content-mgr-add-btn ${showAdd ? "active" : ""}`}
@@ -172,7 +170,6 @@ function CourseContentManager() {
         </button>
       </div>
 
-      {/* Add Chapter Form (Collapsible) */}
       {showAdd && (
         <form
           onSubmit={handleAddChapter}
@@ -221,20 +218,26 @@ function CourseContentManager() {
               />
             </div>
           </div>
-          {/* Add Quiz Button */}
+
           <div className="d-flex align-items-center gap-2 mt-3">
             <button
               type="button"
-              className={`btn btn-outline-secondary btn-sm content-mgr-toggle-quiz ${showQuiz ? "active" : ""}`}
-              onClick={() => setShowQuiz((v) => !v)}
+              className={`btn btn-outline-secondary btn-sm ${showQuiz ? "active" : ""}`}
+              onClick={() => setShowQuiz(v => !v)}
             >
               {showQuiz ? "Hide Quiz" : "Add Quiz"}
             </button>
-            <span className="small text-muted">Add quiz questions for this chapter (optional)</span>
+            <button
+              type="button"
+              className={`btn btn-outline-secondary btn-sm ${showAssignment ? "active" : ""}`}
+              onClick={() => setShowAssignment(v => !v)}
+            >
+              {showAssignment ? "Hide Assignment" : "Add Assignment"}
+            </button>
           </div>
-          {/* Quiz Fields (collapsible) */}
+
           {showQuiz && (
-            <div className="mt-3 content-mgr-quiz-fields">
+            <div className="mt-3">
               {chapterForm.quiz.map((q, qIdx) => (
                 <div key={qIdx} className="mb-3 p-3 border rounded bg-light">
                   <input
@@ -275,8 +278,22 @@ function CourseContentManager() {
               </button>
             </div>
           )}
+
+          {showAssignment && (
+            <div className="mt-3">
+              <textarea
+                name="assignment"
+                value={chapterForm.assignment}
+                onChange={handleChapterChange}
+                className="form-control"
+                placeholder="Enter assignment question for this chapter"
+                rows={3}
+              />
+            </div>
+          )}
+
           <div className="d-flex mt-4">
-            <button type="submit" className="btn btn-success ms-auto content-mgr-submit-btn">
+            <button type="submit" className="btn btn-success ms-auto">
               Add Chapter
             </button>
           </div>

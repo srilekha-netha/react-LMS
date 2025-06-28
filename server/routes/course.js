@@ -67,30 +67,32 @@ router.get('/teacher/:teacherId', async (req, res) => {
   }
 });
 
-// Add Chapter
+// ✅ Add Chapter with Assignment
 router.post('/:id/add-chapter', upload.fields([
   { name: 'video', maxCount: 1 },
   { name: 'pdf', maxCount: 1 }
 ]), async (req, res) => {
   try {
-    const { title, content, quiz } = req.body;
+    const { title, content, quiz, assignmentQuestion } = req.body;
+
     const course = await Course.findById(req.params.id);
     if (!course) return res.status(404).json({ message: "Course not found" });
 
     const videoUrl = req.files['video'] ? '/uploads/chapter_files/' + req.files['video'][0].filename : '';
     const pdfUrl = req.files['pdf'] ? '/uploads/chapter_files/' + req.files['pdf'][0].filename : '';
-    let quizArr = quiz ? JSON.parse(quiz) : [];
+    const quizArr = quiz ? JSON.parse(quiz) : [];
 
     course.chapters.push({
       title,
+      content,
       videoUrl,
       pdfUrl,
-      content,
       quiz: quizArr,
+      assignmentQuestion: assignmentQuestion || "",
       locked: true
     });
-    await course.save();
 
+    await course.save();
     res.status(201).json({ message: "Chapter added", chapters: course.chapters });
   } catch (err) {
     res.status(500).json({ message: "Error adding chapter", error: err.message });
@@ -135,9 +137,7 @@ router.get('/', async (req, res) => {
         };
       })
     );
-
     return res.status(200).json(result);
-
   } catch (err) {
     console.error("🔥 Error in /:", err);
     res.status(500).json({ message: "Internal Server Error", error: err.message });

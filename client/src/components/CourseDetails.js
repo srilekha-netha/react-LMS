@@ -70,6 +70,7 @@ function CourseDetails() {
   return (
     <div className="container py-4">
       <h3 className="mb-4 fw-bold">{course.title}</h3>
+
       {course.chapters.map((chapter, idx) => {
         const isUnlocked = idx < enrollment.chaptersUnlocked;
         const isCurrent = idx === currentChapter;
@@ -77,6 +78,7 @@ function CourseDetails() {
         return (
           <div key={idx} className="p-3 mb-4 border rounded bg-light">
             <h5>Chapter {idx + 1}: {chapter.title}</h5>
+
             {isUnlocked ? (
               <>
                 <p>{chapter.content}</p>
@@ -108,7 +110,15 @@ function CourseDetails() {
                   </div>
                 )}
 
-                {/* Quiz Display */}
+                {/* ✅ Assignment Display */}
+                {typeof chapter.assignmentQuestion === "string" && chapter.assignmentQuestion.trim() !== "" && (
+                  <div className="mt-3">
+                    <h6>📝 Assignment</h6>
+                    <p><strong>Question:</strong> {chapter.assignmentQuestion}</p>
+                  </div>
+                )}
+
+                {/* ✅ Quiz Display */}
                 {chapter.quiz && chapter.quiz.length > 0 && (
                   <div className="mt-4">
                     <h6>📝 Quiz</h6>
@@ -148,6 +158,7 @@ function CourseDetails() {
                   </div>
                 )}
 
+                {/* ✅ Mark Chapter as Complete */}
                 {isCurrent && (
                   <button
                     className="btn btn-primary mt-3"

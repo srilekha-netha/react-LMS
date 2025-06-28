@@ -1,126 +1,171 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "./StudentDashboard.css"; // Optional: your custom styles
 
 function StudentAssignments() {
   const [assignments, setAssignments] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [chapters, setChapters] = useState([]);
+  const [selectedChapterIndex, setSelectedChapterIndex] = useState("");
   const [file, setFile] = useState(null);
   const [msg, setMsg] = useState("");
 
-  const [user] = useState(() => JSON.parse(localStorage.getItem("user"))); // Avoid warning
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
-    if (!user?._id) return;
-    axios.get(`http://localhost:5000/api/assignments/byUser/${user._id}`)
+    if (!user._id) return;
 
-    axios
-      .get(`http://localhost:5000/api/assignments/byUser/${user._id}`)
-      .then((res) => setAssignments(res.data))
-      .catch((err) => console.error("Error fetching assignments:", err));
-  }, [msg, user._id]); // ✅ ESLint warning resolved
+    // Load enrolled courses
+    axios.get(`http://localhost:5000/api/enrollments/byUser/${user._id}`)
+      .then(res => {
+        const enrolled = (res.data || []).filter(e => e.course && e.course._id);
+        setEnrolledCourses(enrolled);
+      })
+      .catch(err => console.error("❌ Enrollment load error:", err));
+
+    // Load previous submissions
+    axios.get(`http://localhost:5000/api/assignments/byUser/${user._id}`)
+      .then(res => setAssignments(res.data))
+      .catch(err => console.error("❌ Assignment load error:", err));
+  }, [msg, user._id]);
+
+  // When a course is selected, load its chapters
+  useEffect(() => {
+    if (!selectedCourseId) return;
+
+    axios.get(`http://localhost:5000/api/courses/${selectedCourseId}`)
+      .then(res => setChapters(res.data.chapters || []))
+      .catch(() => setChapters([]));
+  }, [selectedCourseId]);
 
   const handleFileChange = (e) => setFile(e.target.files[0]);
 
-  const handleSelect = (assignment) => {
-    setSelected(assignment);
-    setMsg("");
-  };
-
   const handleSubmit = async () => {
-    if (!file) return setMsg("Choose a file!");
+    if (!selectedCourseId || selectedChapterIndex === "" || !file) {
+      setMsg("❌ Please select a course, chapter, and upload a file.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("student", selected.student);
-    formData.append("course", selected.course._id);
-    formData.append("chapter", selected.chapter);
+    formData.append("student", user._id);
+    formData.append("course", selectedCourseId);
+    formData.append("chapter", selectedChapterIndex); // ✅ Use selected chapter index
 
     try {
       await axios.post("http://localhost:5000/api/assignments/submit", formData);
-      setMsg("Assignment submitted successfully!");
+      setMsg("✅ Assignment submitted!");
       setFile(null);
-      setSelected(null);
+      setSelectedCourseId("");
+      setSelectedChapterIndex("");
+      setChapters([]);
     } catch (err) {
-      setMsg("Submission failed.");
-      console.error(err);
+      console.error("❌ Submit error:", err);
+      setMsg("❌ Failed to submit assignment.");
     }
   };
 
   return (
     <div className="container py-4">
-      <h2 className="mb-4 fw-bold">My Assignments</h2>
+      <h2 className="fw-bold mb-4">📄 Student Assignments</h2>
 
-      {assignments.length === 0 ? (
-        <div className="alert alert-info">No assignments found.</div>
-      ) : (
-        <table className="table table-bordered table-striped">
-          <thead className="table-dark">
-            <tr>
-              <th>Course</th>
-              <th>Chapter</th>
-              <th>File</th>
-              <th>Status</th>
-              <th>Grade</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {assignments.map((a) => (
-              <tr key={a._id}>
-                <td>{a.course.title}</td>
-                <td>{a.chapter}</td>
-                <td>
-                  {a.fileUrl ? (
-                    <a href={a.fileUrl} target="_blank" rel="noopener noreferrer">
-                      View File
-                    </a>
-                  ) : (
-                    "No File"
-                  )}
-                </td>
-                <td>
-                  {a.status === "Graded" ? (
-                    <span className="badge bg-success">Graded</span>
-                  ) : (
-                    <span className="badge bg-warning text-dark">Submitted</span>
-                  )}
-                </td>
-                <td>{a.grade || "N/A"}</td>
-                <td>
-                  {a.status !== "Graded" && (
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => handleSelect(a)}
-                    >
-                      Submit / Resubmit
-                    </button>
-                  )}
-                </td>
-              </tr>
+      <div className="card p-3 mb-4">
+        <h4>Upload Assignment (PDF)</h4>
+        <div className="mb-3">
+          <label>Select Course:</label>
+          <select
+            className="form-select"
+            value={selectedCourseId}
+            onChange={(e) => {
+              setSelectedCourseId(e.target.value);
+              setSelectedChapterIndex("");
+            }}
+          >
+            <option value="">-- Select Course --</option>
+            {enrolledCourses.map((e, i) => (
+              <option key={i} value={e.course._id}>
+                {e.course.title}
+              </option>
             ))}
-          </tbody>
-        </table>
-      )}
-
-      {selected && (
-        <div className="mt-4">
-          <h5>
-            Submit Assignment: <strong>{selected.course.title}</strong>, Chapter{" "}
-            <strong>{selected.chapter}</strong>
-          </h5>
-          <input type="file" className="form-control mt-2" onChange={handleFileChange} />
-          <div className="mt-2">
-            <button className="btn btn-success me-2" onClick={handleSubmit}>
-              Upload
-            </button>
-            <button className="btn btn-secondary" onClick={() => setSelected(null)}>
-              Cancel
-            </button>
-          </div>
-          {msg && <p className="mt-2 text-success">{msg}</p>}
+          </select>
         </div>
-      )}
+
+        {chapters.length > 0 && (
+          <div className="mb-3">
+            <label>Select Chapter:</label>
+            <select
+              className="form-select"
+              value={selectedChapterIndex}
+              onChange={(e) => setSelectedChapterIndex(e.target.value)}
+            >
+              <option value="">-- Select Chapter --</option>
+              {chapters.map((ch, idx) => (
+                <option key={idx} value={idx}>
+                  {`Chapter ${idx + 1}: ${ch.title}`}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="mb-3">
+          <label>Choose PDF:</label>
+          <input
+            type="file"
+            className="form-control"
+            accept="application/pdf"
+            onChange={handleFileChange}
+          />
+        </div>
+
+        <button className="btn btn-success" onClick={handleSubmit}>
+          Submit Assignment
+        </button>
+
+        {msg && <p className="mt-2">{msg}</p>}
+      </div>
+
+      <div>
+        <h5>📋 Your Submissions</h5>
+        {assignments.length === 0 ? (
+          <div className="alert alert-info">No assignments found.</div>
+        ) : (
+          <table className="table table-bordered table-striped">
+            <thead className="table-dark">
+              <tr>
+                <th>Course</th>
+                <th>Chapter</th>
+                <th>Status</th>
+                <th>Grade</th>
+                <th>File</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assignments.map((a) => (
+                <tr key={a._id}>
+                  <td>{a.course?.title}</td>
+                  <td>{parseInt(a.chapter) + 1}</td>
+                  <td>
+                    <span className={`badge ${a.status === "Graded" ? "bg-success" : "bg-warning text-dark"}`}>
+                      {a.status}
+                    </span>
+                  </td>
+                  <td>{a.grade || "N/A"}</td>
+                  <td>
+                    {a.fileUrl ? (
+                      <a href={`http://localhost:5000${a.fileUrl}`} target="_blank" rel="noopener noreferrer">
+                        View
+                      </a>
+                    ) : (
+                      "No File"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }
