@@ -6,7 +6,7 @@ function PaymentHistory() {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
-    axios.get(`http://localhost:5000/api/payments/history/${user._id}`)
+axios.get(`http://localhost:5000/api/payments/user/${user._id}`)
       .then(res => setHistory(res.data));
   }, []);
 

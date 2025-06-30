@@ -6,6 +6,7 @@ function Earnings() {
     redeemedCoupons: 0,
     reportUrl: "#",
   });
+  
 
   useEffect(() => {
     // Dummy data – Replace with real backend/API response
