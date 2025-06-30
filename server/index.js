@@ -30,6 +30,7 @@ app.use("/api/coupons", require("./routes/coupon"));
 app.use("/api/notifications", require("./routes/notification"));
 app.use("/api/users", require("./routes/user"));
 app.use("/api/payments", require("./routes/payment"));
+
 app.use("/api/messages", require("./routes/message")); // ✅ Correct single import for messaging
 
 // ✅ Health check
