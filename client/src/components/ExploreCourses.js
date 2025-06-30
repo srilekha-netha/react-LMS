@@ -10,22 +10,19 @@ function ExploreCourses() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!user || !user._id) {
       navigate("/login");
     }
   }, [user, navigate]);
 
-  // Load only not-enrolled courses
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/enrollments/notEnrolled/${user._id}`);
-        console.log("✅ Not Enrolled Courses:", res.data);
         setCourses(res.data);
       } catch (err) {
-        console.error("❌ Failed to load not enrolled courses:", err);
+        console.error("❌ Failed to load courses:", err);
         setCourses([]);
       }
     };
@@ -45,22 +42,66 @@ function ExploreCourses() {
       });
       setApplyMsg({ ...applyMsg, [courseId]: res.data.message });
     } catch (err) {
-      setApplyMsg({ ...applyMsg, [courseId]: err.response?.data?.message || "Invalid Coupon" });
+      setApplyMsg({
+        ...applyMsg,
+        [courseId]: err.response?.data?.message || "Invalid Coupon",
+      });
     }
   };
 
-  const enrollCourse = async (courseId, price) => {
+  const startPayment = async (course) => {
     try {
-      await axios.post("http://localhost:5000/api/enrollments/enroll", {
-        courseId,
-        userId: user._id,
-        amountPaid: price,
+      const res = await axios.post("http://localhost:5000/api/payments/create-order", {
+        amount: course.price, // amount in rupees, backend multiplies by 100
+        studentId: user._id,
+        courseId: course._id,
       });
-      alert("✅ Enrolled successfully! Check 'My Courses'.");
-      // Remove the course from list after enrolling
-      setCourses(courses.filter(course => course._id !== courseId));
+
+      const options = {
+        key: "rzp_test_dGFALpaB5MZyZr", // Replace with your real Razorpay key
+        amount: res.data.amount,
+        currency: "INR",
+        name: "LMS Payment",
+        description: course.title,
+        order_id: res.data.id,
+        handler: async function (response) {
+          try {
+            await axios.post("http://localhost:5000/api/enrollments/enroll", {
+              userId: user._id,
+              courseId: course._id,
+              amountPaid: course.price,
+            });
+
+            await axios.post("http://localhost:5000/api/payments/save", {
+              studentId: user._id,
+              courseId: course._id,
+              amount: course.price,
+              coupon: coupon[course._id] || "",
+              paymentId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id,
+              receipt: res.data.receipt,
+              status: "paid",
+            });
+
+            alert("✅ Payment successful and enrollment done!");
+            setCourses((prev) => prev.filter((c) => c._id !== course._id));
+          } catch (err) {
+            console.error("❌ Enrollment or payment save failed:", err);
+            alert("Payment succeeded, but enrollment failed!");
+          }
+        },
+        prefill: {
+          name: user.name,
+          email: user.email,
+        },
+        theme: { color: "#3399cc" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
-      alert(err.response?.data?.message || "Enrollment failed");
+      console.error("❌ Payment initiation failed:", err);
+      alert("Payment failed. Try again.");
     }
   };
 
@@ -87,8 +128,9 @@ function ExploreCourses() {
                     </div>
                   )}
                   <span
-                    className={`badge position-absolute top-0 end-0 mt-2 me-2 rounded-pill px-3 py-1 small 
-                      ${course.published ? "bg-success" : "bg-secondary"}`}
+                    className={`badge position-absolute top-0 end-0 mt-2 me-2 rounded-pill px-3 py-1 small ${
+                      course.published ? "bg-success" : "bg-secondary"
+                    }`}
                   >
                     {course.published ? "Published" : "Draft"}
                   </span>
@@ -99,8 +141,12 @@ function ExploreCourses() {
                     {course.description ? course.description.slice(0, 90) : "No description"}
                     {course.description && course.description.length > 90 ? "..." : ""}
                   </p>
-                  <p className="mb-1"><strong>Level:</strong> {course.difficulty}</p>
-                  <p className="mb-1"><strong>Price:</strong> ₹{course.price}</p>
+                  <p className="mb-1">
+                    <strong>Level:</strong> {course.difficulty}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Price:</strong> ₹{course.price}
+                  </p>
 
                   <input
                     type="text"
@@ -119,12 +165,11 @@ function ExploreCourses() {
                     <div className="text-success small mt-1">{applyMsg[course._id]}</div>
                   )}
 
-                  {/* ✅ Enroll Button */}
                   <button
                     className="btn btn-primary mt-3"
-                    onClick={() => enrollCourse(course._id, course.price)}
+                    onClick={() => startPayment(course)}
                   >
-                    Enroll
+                    Pay & Enroll
                   </button>
                 </div>
               </div>

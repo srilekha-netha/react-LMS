@@ -14,6 +14,9 @@ import Messages from "./components/Messages";
 import Profile from "./components/Profile";
 import StudentDashboard from "./components/StudentDashboard";
 
+import RazorpayPayment from "./components/RazorpayPayment";
+
+
 import Earnings from "./components/Earnings";          // ✅ Fixed path
 import Notifications from "./components/Notifications"; // ✅ Fixed path
 import Logout from "./components/Logout";              // ✅ Fixed path
@@ -65,6 +68,9 @@ function App() {
           <Route path="payments" element={<PaymentHistory />} />
           <Route path="profile" element={<StudentProfile />} />
           <Route path="notifications" element={<StudentNotifications />} />
+
+          <Route path="razorpay" element={<RazorpayPayment />} />
+
           <Route path="logout" element={<Logout />} />
         </Route>
         <Route path="/admin" element={<AdminDashboard />} />
