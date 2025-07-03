@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+const adminUsersRoute = require("./routes/usersadmin");
 const path = require("path");
 
 const app = express();
@@ -27,9 +28,13 @@ app.use("/api/courses", require("./routes/course"));
 app.use("/api/enrollments", require("./routes/enrollment"));
 app.use("/api/assignments", require("./routes/assignment"));
 app.use("/api/coupons", require("./routes/coupon"));
+app.use("/api/admin/reports", require("./routes/adminReports"));
 app.use("/api/notifications", require("./routes/notification"));
 app.use("/api/users", require("./routes/user"));
 app.use("/api/payments", require("./routes/payment"));
+app.use("/api/admin/users", adminUsersRoute);
+app.use("/api/admin/onboarding", require("./routes/teacheradmin"));
+
 
 app.use("/api/messages", require("./routes/message")); // ✅ Correct single import for messaging
 
