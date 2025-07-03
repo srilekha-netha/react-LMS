@@ -31,8 +31,12 @@ function Notifications() {
       // Remove notification from UI
       setNotifications((prev) => prev.filter((n) => n._id !== note._id));
 
-      // Navigate to messages
-      navigate("/teacher/messages");
+      // Smart navigation
+      if (note.text?.toLowerCase().includes("submitted assignment")) {
+        navigate("/teacher/assignments");
+      } else {
+        navigate("/teacher/messages");
+      }
     } catch (err) {
       console.error("❌ Failed to mark as read or navigate:", err);
     }
@@ -53,39 +57,29 @@ function Notifications() {
                 onClick={() => handleNotificationClick(note)}
                 className="list-group-item d-flex align-items-start justify-content-between bg-light border-start border-4 border-primary"
                 style={{ cursor: "pointer", transition: "background-color 0.3s" }}
-                title="Click to mark as read and view message"
+                title="Click to mark as read and view"
               >
                 <div className="d-flex align-items-start gap-2">
-                  {note.icon ? (
-                    <i className={`${note.icon} text-primary mt-1`} style={{ fontSize: "1.2rem" }}></i>
-                  ) : (
-                    <i className="bi bi-bell-fill text-secondary mt-1" style={{ fontSize: "1.2rem" }}></i>
-                  )}
-                  <div className="d-flex align-items-start gap-2">
-                    {note.icon ? (
-                      <i className={`${note.icon} text-primary mt-1`} style={{ fontSize: "1.2rem" }}></i>
-                    ) : (
-                      <i className="bi bi-bell-fill text-secondary mt-1" style={{ fontSize: "1.2rem" }}></i>
-                    )}
-                    <div>
-                      <p className="mb-1 fw-semibold">{note.text || "🔔 New notification"}</p>
-                      <small className="text-muted">
-                        {note.createdAt
-                          ? new Date(note.createdAt).toLocaleString("en-GB")
-                          : "Unknown time"}
-                      </small>
-                    </div>
+                  <i className={`${note.icon || "bi bi-bell-fill"} text-primary mt-1`} style={{ fontSize: "1.2rem" }}></i>
+                  <div>
+                    <p className="mb-1 fw-semibold">{note.text || "🔔 New notification"}</p>
+                    <small className="text-muted">
+                      {note.createdAt
+                        ? new Date(note.createdAt).toLocaleString("en-GB")
+                        : "Unknown time"}
+                    </small>
                   </div>
-
-                  <button
-                    className="btn btn-sm btn-outline-primary"
-                    onClick={() => handleNotificationClick(note)}
-                  >
-                    Mark as Read
-                  </button>
-
                 </div>
-                <span className="badge bg-primary text-white">New</span>
+
+                <button
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Don't trigger li click
+                    handleNotificationClick(note);
+                  }}
+                >
+                  Mark as Read
+                </button>
               </li>
             ))}
           </ul>

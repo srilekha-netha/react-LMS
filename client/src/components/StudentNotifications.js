@@ -25,13 +25,21 @@ function StudentNotifications() {
     fetchNotifications();
   }, []);
 
-  const markReadAndNavigate = async (id) => {
+  const markReadAndNavigate = async (note) => {
     try {
-      await axios.post(`http://localhost:5000/api/notifications/read/${id}`);
-      setNotifications((prev) => prev.filter((n) => n._id !== id));
+      await axios.post(`http://localhost:5000/api/notifications/read/${note._id}`);
+      setNotifications((prev) => prev.filter((n) => n._id !== note._id));
 
-      // ✅ Now actually navigate to student/messages
-      navigate("/student/messages");
+      // ✅ Smart navigation logic
+      if (note.link) {
+        navigate(note.link);
+      } else if (note.text?.toLowerCase().includes("assignment")) {
+        navigate("/student/assignments");
+      } else if (note.text?.toLowerCase().includes("message")) {
+        navigate("/student/messages");
+      } else {
+        navigate("/student/dashboard"); // default fallback
+      }
     } catch (err) {
       console.error("❌ Error marking notification as read:", err);
     }
@@ -39,7 +47,7 @@ function StudentNotifications() {
 
   return (
     <div className="container py-4">
-      <h2 className="mb-4">Notifications</h2>
+      <h2 className="mb-4">📬 Notifications</h2>
 
       {notifications.length === 0 ? (
         <div className="alert alert-info">No new notifications.</div>
@@ -50,7 +58,7 @@ function StudentNotifications() {
               <li
                 key={note._id}
                 className="list-group-item d-flex align-items-start justify-content-between bg-light border-start border-4 border-primary"
-                style={{ cursor: "default" }}
+                style={{ cursor: "pointer" }}
               >
                 <div className="d-flex align-items-start gap-2">
                   <i
@@ -71,7 +79,7 @@ function StudentNotifications() {
 
                 <button
                   className="btn btn-sm btn-outline-primary"
-                  onClick={() => markReadAndNavigate(note._id)}
+                  onClick={() => markReadAndNavigate(note)}
                 >
                   Mark as Read
                 </button>
