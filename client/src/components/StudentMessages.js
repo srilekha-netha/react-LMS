@@ -13,23 +13,23 @@ function StudentMessages() {
   useEffect(() => {
     if (!user || !user._id) return;
 
-    // Fetch inbox messages
-    axios.get(`http://localhost:5000/api/messages/inbox/${user._id}`)
-      .then(res => setInbox(res.data || []))
-      .catch(err => console.error("Inbox load error", err));
+    const fetchAll = async () => {
+      try {
+        const inboxRes = await axios.get(`http://localhost:5000/api/messages/inbox/${user._id}`);
+        setInbox(inboxRes.data || []);
 
-    // Fetch sent messages
-    axios.get(`http://localhost:5000/api/messages/sent/${user._id}`)
-      .then(res => setSent(res.data || []))
-      .catch(err => console.error("Sent load error", err));
+        const sentRes = await axios.get(`http://localhost:5000/api/messages/sent/${user._id}`);
+        setSent(sentRes.data || []);
 
-    // Fetch enrolled courses
-    axios.get(`http://localhost:5000/api/enrollments/byUser/${user._id}`)
-      .then(res => {
-        const valid = (res.data || []).filter(e => e.course && e.course._id);
+        const enrollments = await axios.get(`http://localhost:5000/api/enrollments/byUser/${user._id}`);
+        const valid = (enrollments.data || []).filter(e => e.course && e.course._id);
         setCourses(valid);
-      })
-      .catch(err => console.error("Courses load error", err));
+      } catch (err) {
+        console.error("❌ Load error", err);
+      }
+    };
+
+    fetchAll();
   }, [user]);
 
   const handleSend = async () => {
@@ -57,12 +57,21 @@ function StudentMessages() {
       setContent("");
       alert("✅ Message sent!");
 
-      // Refresh sent messages
       const sentRes = await axios.get(`http://localhost:5000/api/messages/sent/${user._id}`);
       setSent(sentRes.data || []);
     } catch (err) {
       alert("❌ Failed to send message");
       console.error(err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/messages/${id}`);
+      setInbox(prev => prev.filter(msg => msg._id !== id));
+      setSent(prev => prev.filter(msg => msg._id !== id));
+    } catch (err) {
+      console.error("❌ Delete error", err);
     }
   };
 
@@ -112,9 +121,14 @@ function StudentMessages() {
               <li className="list-group-item text-muted">No messages received</li>
             ) : (
               inbox.map((msg, i) => (
-                <li key={i} className="list-group-item">
-                  <strong>From: {msg?.from?.name || "Unknown"}</strong><br />
-                  {msg?.content || ""}
+                <li key={i} className="list-group-item d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong>From: {msg?.from?.name || "Unknown"}</strong><br />
+                    {msg?.content || ""}
+                  </div>
+                  <button className="btn btn-sm btn-danger ms-2" onClick={() => handleDelete(msg._id)}>
+                    Delete
+                  </button>
                 </li>
               ))
             )}
@@ -128,9 +142,14 @@ function StudentMessages() {
               <li className="list-group-item text-muted">No messages sent</li>
             ) : (
               sent.map((msg, i) => (
-                <li key={i} className="list-group-item">
-                  <strong>To: {msg?.to?.name || "Unknown"}</strong><br />
-                  {msg?.content || ""}
+                <li key={i} className="list-group-item d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong>To: {msg?.to?.name || "Unknown"}</strong><br />
+                    {msg?.content || ""}
+                  </div>
+                  <button className="btn btn-sm btn-danger ms-2" onClick={() => handleDelete(msg._id)}>
+                    Delete
+                  </button>
                 </li>
               ))
             )}

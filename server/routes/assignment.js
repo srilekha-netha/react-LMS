@@ -4,10 +4,12 @@ const fs = require("fs");
 const path = require("path");
 const Assignment = require("../models/Assignment");
 const Course = require("../models/Course");
+const User = require("../models/User");
+const Notification = require("../models/Notification");
 
 const router = express.Router();
 
-// ✅ Storage config (PDF-only)
+// ✅ Storage config for PDF-only
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const dir = "uploads/assignments";
@@ -29,7 +31,7 @@ const upload = multer({
   }
 });
 
-// ✅ Submit assignment
+// ✅ Submit assignment and notify teacher
 router.post("/submit", upload.single("file"), async (req, res) => {
   try {
     const { student, course, chapter } = req.body;
@@ -39,7 +41,6 @@ router.post("/submit", upload.single("file"), async (req, res) => {
     if (!courseDoc) return res.status(404).json({ message: "Course not found" });
 
     const teacher = courseDoc.teacher;
-
     let assignment = await Assignment.findOne({ student, course, chapter });
 
     if (assignment) {
@@ -58,6 +59,15 @@ router.post("/submit", upload.single("file"), async (req, res) => {
       });
       await assignment.save();
     }
+
+    // 🔔 Notify the teacher
+    const studentUser = await User.findById(student);
+    await Notification.create({
+      user: teacher,
+      text: `📄 ${studentUser?.name || "Student"} submitted assignment for "${courseDoc.title}"`,
+      icon: "bi bi-file-earmark-arrow-up",
+      read: false
+    });
 
     res.json({ message: "Assignment submitted!", assignment });
   } catch (err) {
@@ -82,7 +92,6 @@ router.get("/byTeacher/:teacherId", async (req, res) => {
     const assignments = await Assignment.find({ teacher: req.params.teacherId })
       .populate("student")
       .populate("course");
-
     res.json(assignments);
   } catch (err) {
     console.error("❌ Teacher Fetch Error:", err);
@@ -90,17 +99,26 @@ router.get("/byTeacher/:teacherId", async (req, res) => {
   }
 });
 
-// ✅ Grade assignment
+// ✅ Grade assignment and notify student
 router.post("/grade/:assignmentId", async (req, res) => {
   try {
     const { grade } = req.body;
+
     const assignment = await Assignment.findByIdAndUpdate(
       req.params.assignmentId,
       { status: "Graded", grade },
       { new: true }
-    );
+    ).populate("student").populate("course");
 
     if (!assignment) return res.status(404).json({ message: "Assignment not found" });
+
+    // 🔔 Notify the student
+    await Notification.create({
+      user: assignment.student._id,
+      text: `✅ Your assignment for "${assignment.course.title}" has been graded: ${grade}`,
+      icon: "bi bi-patch-check-fill",
+      read: false
+    });
 
     res.json({ message: "Assignment graded", assignment });
   } catch (err) {

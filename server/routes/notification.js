@@ -2,12 +2,38 @@ const express = require("express");
 const Notification = require("../models/Notification");
 const router = express.Router();
 
+// ✅ SEND a notification (used for assignment submissions, messages, etc.)
+router.post("/send", async (req, res) => {
+  const { user, text, icon } = req.body;
+
+  if (!user || !text) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  try {
+    const newNotification = new Notification({
+      user,
+      text,
+      icon: icon || "bi bi-bell",
+      read: false,
+    });
+
+    const saved = await newNotification.save();
+    res.status(201).json(saved);
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to create notification",
+      error: err.message,
+    });
+  }
+});
+
 // ✅ Get all notifications for a user (most recent first)
 router.get("/user/:userId", async (req, res) => {
   try {
     const notes = await Notification.find({ user: req.params.userId })
       .sort({ createdAt: -1 })
-      .lean(); // good for performance
+      .lean(); // performance
     res.json(notes);
   } catch (err) {
     res.status(500).json({
@@ -23,7 +49,7 @@ router.post("/read/:id", async (req, res) => {
     const updated = await Notification.findByIdAndUpdate(
       req.params.id,
       { read: true },
-      { new: true } // return updated document
+      { new: true }
     );
 
     if (!updated) {
@@ -39,7 +65,7 @@ router.post("/read/:id", async (req, res) => {
   }
 });
 
-// ✅ Mark all notifications as read for a user
+// ✅ Mark ALL notifications as read for a user
 router.post("/read-all/:userId", async (req, res) => {
   try {
     await Notification.updateMany(
