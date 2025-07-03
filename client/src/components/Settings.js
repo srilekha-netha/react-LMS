@@ -1,28 +1,35 @@
+// src/components/Settings.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import "./StudentDashboard.css"; // responsive styles
+
+// Fake fallback settings
+const fakeSettings = {
+  siteTitle: "My LMS Platform",
+  logoUrl: "https://via.placeholder.com/150x50?text=Logo",
+  razorpayKey: "rzp_test_1234567890",
+  stripeKey: "pk_test_abcdefghijklmnopqrstuvwxyz",
+  defaultRole: "student",
+  supportEmail: "support@lmsplatform.com",
+  enableCourseApproval: true,
+  enableChat: true,
+};
 
 function Settings() {
-  const [settings, setSettings] = useState({
-    siteTitle: "",
-    logoUrl: "",
-    razorpayKey: "",
-    stripeKey: "",
-    defaultRole: "student",
-    supportEmail: "",
-    enableCourseApproval: true,
-    enableChat: true,
-  });
-
+  const [settings, setSettings] = useState(fakeSettings);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("/api/admin/settings")
-      .then(res => {
+    axios
+      .get("/api/admin/settings")
+      .then((res) => {
         setSettings(res.data);
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error loading settings", err);
+        // use fakeSettings fallback
+        setSettings(fakeSettings);
         setLoading(false);
       });
   }, []);
@@ -40,18 +47,22 @@ function Settings() {
     axios
       .put("/api/admin/settings", settings)
       .then(() => alert("Settings updated successfully"))
-      .catch((err) => console.error("Update failed", err));
+      .catch((err) => {
+        console.error("Update failed", err);
+        alert("Failed to update settings, using fallback values.");
+      });
   };
 
   return (
     <div className="container mt-4">
-      <h3>⚙️ System Settings</h3>
+      <h3 className="mb-3">⚙️ System Settings</h3>
 
       {loading ? (
         <p>Loading settings...</p>
       ) : (
-        <form onSubmit={handleSubmit} className="row g-3 mt-3">
-          <div className="col-md-6">
+        <form onSubmit={handleSubmit} className="row g-3">
+          {/* Site Title */}
+          <div className="col-12 col-md-6">
             <label className="form-label">Site Title</label>
             <input
               type="text"
@@ -63,10 +74,11 @@ function Settings() {
             />
           </div>
 
-          <div className="col-md-6">
+          {/* Logo URL */}
+          <div className="col-12 col-md-6">
             <label className="form-label">Logo URL</label>
             <input
-              type="text"
+              type="url"
               name="logoUrl"
               className="form-control"
               value={settings.logoUrl}
@@ -75,7 +87,8 @@ function Settings() {
             />
           </div>
 
-          <div className="col-md-6">
+          {/* Razorpay Key */}
+          <div className="col-12 col-md-6">
             <label className="form-label">Razorpay Key</label>
             <input
               type="text"
@@ -86,7 +99,8 @@ function Settings() {
             />
           </div>
 
-          <div className="col-md-6">
+          {/* Stripe Key */}
+          <div className="col-12 col-md-6">
             <label className="form-label">Stripe Key</label>
             <input
               type="text"
@@ -97,7 +111,8 @@ function Settings() {
             />
           </div>
 
-          <div className="col-md-4">
+          {/* Default Role */}
+          <div className="col-12 col-md-4">
             <label className="form-label">Default Role</label>
             <select
               className="form-select"
@@ -111,7 +126,8 @@ function Settings() {
             </select>
           </div>
 
-          <div className="col-md-4">
+          {/* Support Email */}
+          <div className="col-12 col-md-4">
             <label className="form-label">Support Email</label>
             <input
               type="email"
@@ -123,8 +139,9 @@ function Settings() {
             />
           </div>
 
-          <div className="col-md-4 d-flex align-items-end">
-            <div className="form-check me-3">
+          {/* Feature Toggles */}
+          <div className="col-12 col-md-4 d-flex flex-column flex-md-row align-items-start mt-3">
+            <div className="form-check me-4">
               <input
                 className="form-check-input"
                 type="checkbox"
@@ -137,7 +154,6 @@ function Settings() {
                 Enable Course Approval
               </label>
             </div>
-
             <div className="form-check">
               <input
                 className="form-check-input"
@@ -153,7 +169,8 @@ function Settings() {
             </div>
           </div>
 
-          <div className="col-12 text-end">
+          {/* Save Button */}
+          <div className="col-12 text-end mt-3">
             <button className="btn btn-primary">
               <i className="bi bi-save me-1"></i> Save Settings
             </button>
