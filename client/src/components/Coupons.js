@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import './StudentDashboard.css';
 
 function Coupons() {
   const [coupons, setCoupons] = useState([]);
   const [form, setForm] = useState({
     code: "",
     discount: 0,
-    type: "percentage", // or "flat"
+    type: "percentage",
     expiry: "",
     usageLimit: 1,
-    applicableCourses: "",
+    applicableCourses: ""
   });
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,59 +18,33 @@ function Coupons() {
   }, []);
 
   const fetchCoupons = () => {
-    axios
-      .get("/api/admin/coupons")
-      .then((res) => {
-        setCoupons(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching coupons", err);
-        setLoading(false);
-      });
+    // use fake data demonstration
+    setTimeout(() => {
+      setCoupons([
+        { id: 1, code: 'WELCOME10', discount: 10, type: 'percentage', expiry: '2025-12-31', usageLimit: 100, applicableCourses: 'All' },
+        { id: 2, code: 'FLAT500', discount: 500, type: 'flat', expiry: '2025-10-01', usageLimit: 50, applicableCourses: 'React,Node' }
+      ]);
+      setLoading(false);
+    }, 500);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
-
+  const handleInputChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const createCoupon = (e) => {
     e.preventDefault();
-    axios
-      .post("/api/admin/coupons", form)
-      .then(() => {
-        setForm({
-          code: "",
-          discount: 0,
-          type: "percentage",
-          expiry: "",
-          usageLimit: 1,
-          applicableCourses: "",
-        });
-        fetchCoupons();
-      })
-      .catch((err) => {
-        console.error("Error creating coupon", err);
-      });
+    alert('Coupon Created: ' + form.code);
+    setForm({ code: "", discount: 0, type: "percentage", expiry: "", usageLimit: 1, applicableCourses: "" });
+    fetchCoupons();
   };
-
   const deleteCoupon = (id) => {
-    if (window.confirm("Are you sure you want to delete this coupon?")) {
-      axios
-        .delete(`/api/admin/coupons/${id}`)
-        .then(fetchCoupons)
-        .catch((err) => console.error("Delete failed", err));
-    }
+    if (window.confirm('Delete coupon?')) fetchCoupons();
   };
 
   return (
     <div className="container mt-4">
-      <h3>🏷️ Coupon Management</h3>
-
-      {/* Coupon Creation Form */}
+      <h3 className="fw-bold">🏷️ Coupon Management</h3>
       <form className="row g-3 my-3" onSubmit={createCoupon}>
-        <div className="col-md-3">
+        <div className="col-12 col-md-3">
+          <label className="form-label">Code</label>
           <input
             type="text"
             name="code"
@@ -82,20 +55,19 @@ function Coupons() {
             required
           />
         </div>
-
-        <div className="col-md-2">
+        <div className="col-6 col-md-2">
+          <label className="form-label">Discount</label>
           <input
             type="number"
             name="discount"
             className="form-control"
-            placeholder="Discount"
             value={form.discount}
             onChange={handleInputChange}
             required
           />
         </div>
-
-        <div className="col-md-2">
+        <div className="col-6 col-md-2">
+          <label className="form-label">Type</label>
           <select
             name="type"
             className="form-select"
@@ -106,8 +78,8 @@ function Coupons() {
             <option value="flat">₹</option>
           </select>
         </div>
-
-        <div className="col-md-2">
+        <div className="col-6 col-md-2">
+          <label className="form-label">Expiry</label>
           <input
             type="date"
             name="expiry"
@@ -117,75 +89,71 @@ function Coupons() {
             required
           />
         </div>
-
-        <div className="col-md-1">
+        <div className="col-6 col-md-1">
+          <label className="form-label">Limit</label>
           <input
             type="number"
             name="usageLimit"
             className="form-control"
-            placeholder="Limit"
             value={form.usageLimit}
             onChange={handleInputChange}
             required
           />
         </div>
-
-        <div className="col-md-2">
+        <div className="col-12 col-md-2">
+          <label className="form-label">Courses</label>
           <input
             type="text"
             name="applicableCourses"
             className="form-control"
-            placeholder="Course IDs (comma)"
             value={form.applicableCourses}
             onChange={handleInputChange}
+            placeholder="Comma-separated"
           />
         </div>
-
         <div className="col-12 text-end">
           <button className="btn btn-success">
-            <i className="bi bi-plus-circle me-1"></i> Create Coupon
+            <i className="bi bi-plus-circle me-1"></i> Create
           </button>
         </div>
       </form>
 
-      {/* Coupon Table */}
       {loading ? (
         <p>Loading coupons...</p>
       ) : (
-        <table className="table table-bordered table-hover">
-          <thead className="table-light">
-            <tr>
-              <th>Code</th>
-              <th>Discount</th>
-              <th>Expiry</th>
-              <th>Usage Limit</th>
-              <th>Courses</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {coupons.map((coupon) => (
-              <tr key={coupon.id}>
-                <td>{coupon.code}</td>
-                <td>
-                  {coupon.discount}
-                  {coupon.type === "percentage" ? "%" : "₹"}
-                </td>
-                <td>{coupon.expiry}</td>
-                <td>{coupon.usageLimit}</td>
-                <td>{coupon.applicableCourses}</td>
-                <td>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => deleteCoupon(coupon.id)}
-                  >
-                    <i className="bi bi-trash"></i>
-                  </button>
-                </td>
+        <div className="table-responsive">
+          <table className="table table-bordered table-hover">
+            <thead className="table-light">
+              <tr>
+                <th>Code</th>
+                <th>Discount</th>
+                <th>Expiry</th>
+                <th>Usage Limit</th>
+                <th>Courses</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {coupons.map((c) => (
+                <tr key={c.id}>
+                  <td data-label="Code">{c.code}</td>
+                  <td data-label="Discount">{c.discount}{c.type === 'percentage' ? '%' : '₹'}</td>
+                  <td data-label="Expiry">{c.expiry}</td>
+                  <td data-label="Usage Limit">{c.usageLimit}</td>
+                  <td data-label="Courses">{c.applicableCourses}</td>
+                  <td data-label="Actions">
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => deleteCoupon(c.id)}
+                    >
+                      <i className="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
