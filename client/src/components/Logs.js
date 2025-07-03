@@ -1,63 +1,72 @@
-import React from "react";
-import { Table, Container, Card } from "react-bootstrap";
-
-const logsData = [
-  {
-    id: 1,
-    action: "User Login",
-    user: "admin@example.com",
-    role: "Admin",
-    ip: "192.168.1.10",
-    timestamp: "2025-06-17 09:45:32",
-  },
-  {
-    id: 2,
-    action: "Deleted Course",
-    user: "admin@example.com",
-    role: "Admin",
-    ip: "192.168.1.10",
-    timestamp: "2025-06-16 16:22:08",
-  },
-  {
-    id: 3,
-    action: "Updated Payment Settings",
-    user: "admin@example.com",
-    role: "Admin",
-    ip: "192.168.1.10",
-    timestamp: "2025-06-15 12:05:47",
-  },
-];
+// src/components/admin/Logs.js
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Container, Card, Table, Spinner, Alert } from "react-bootstrap";
 
 function Logs() {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/admin/logs");
+        const sortedLogs = res.data.sort(
+          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+        );
+        setLogs(sortedLogs);
+        setLoading(false);
+      } catch (err) {
+        console.error("❌ Failed to fetch logs:", err);
+        setError("Failed to load logs. Please try again later.");
+        setLoading(false);
+      }
+    };
+
+    fetchLogs();
+  }, []);
+
   return (
     <Container className="my-4">
       <Card>
-        <Card.Header as="h5">System Logs & Activity</Card.Header>
+        <Card.Header as="h5">📋 System Logs & Activity</Card.Header>
         <Card.Body>
-          <Table striped bordered hover responsive>
-            <thead className="table-dark">
-              <tr>
-                <th>#</th>
-                <th>Action</th>
-                <th>User</th>
-                <th>Role</th>
-                <th>IP Address</th>
-                <th>Timestamp</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logsData.map((log) => (
-                <tr key={log.id}>
-                  <td>{log.id}</td>
-                  <td>{log.action}</td>
-                  <td>{log.user}</td>
-                  <td>{log.role}</td>
-                  <td>{log.ip}</td>
-                  <td>{log.timestamp}</td>
+          {loading ? (
+            <div className="text-center my-4">
+              <Spinner animation="border" variant="primary" />
+              <p>Loading logs...</p>
+            </div>
+          ) : error ? (
+            <Alert variant="danger">{error}</Alert>
+          ) : logs.length === 0 ? (
+            <p className="text-center">No logs found.</p>
+          ) : (
+            <Table striped bordered hover responsive>
+              <thead className="table-dark">
+                <tr>
+                  <th>#</th>
+                  <th>Action</th>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>IP Address</th>
+                  <th>Timestamp</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {logs.map((log, index) => (
+                  <tr key={log._id || index}>
+                    <td>{index + 1}</td>
+                    <td>{log.action}</td>
+                    <td>{log.user}</td>
+                    <td>{log.role}</td>
+                    <td>{log.ip || "N/A"}</td>
+                    <td>{new Date(log.timestamp).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
         </Card.Body>
       </Card>
     </Container>
