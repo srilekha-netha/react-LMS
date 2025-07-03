@@ -36,13 +36,15 @@ import StudentNotifications from "./components/StudentNotifications";
 import AdminLayout from "./components/AdminLayout";
 import AdminDashboard from "./components/AdminDashboard";
 import UserManagement from "./components/UserManagement";
-import CourseManagement from "./components/CourseManagement";
+import TeacherOnboarding from "./components/TeacherOnboarding";
 import PaymentManagement from "./components/PaymentManagement";
 import Reports from "./components/Reports";
+import CourseManagementAdmin from "./components/CourseManagementAdmin";
 import Coupons from "./components/Coupons";
 import Settings from "./components/Settings";
 import Logs from "./components/Logs";
 import AdminProfile from "./components/AdminProfile";
+import EditCourseAdmin from "./components/EditCourseAdmin";
 
 
 
@@ -73,21 +75,25 @@ function App() {
 
           <Route path="logout" element={<Logout />} />
         </Route>
-        <Route path="/admin" element={<AdminDashboard />} />
+       <Route path="/admin" element={<AdminLayout />}>
+  <Route index element={<AdminDashboard />} />
+  <Route path="users" element={<UserManagement />} />
+  <Route path="/admin/courses" element={<CourseManagementAdmin />} />
+  <Route
+    path="/admin/courses/:id/edit"
+    element={<EditCourseAdmin />}
+  />
+  <Route path="/admin/teachers/onboarding" element={<TeacherOnboarding />} />
 
-        {/* Admin Panel */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="courses" element={<CourseManagement />} />
-          <Route path="payments" element={<PaymentManagement />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="coupons" element={<Coupons />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="logs" element={<Logs />} />
-          <Route path="profile" element={<AdminProfile />} />
-          <Route path="logout" element={<Logout />} />
-        </Route>
+  <Route path="payments" element={<PaymentManagement />} />
+  <Route path="reports" element={<Reports />} />
+  <Route path="coupons" element={<Coupons />} />
+  <Route path="settings" element={<Settings />} />
+  <Route path="logs" element={<Logs />} />
+  <Route path="profile" element={<AdminProfile />} />
+  <Route path="logout" element={<Logout />} />
+</Route>
+
 
         {/* Nested routes under /teacher */}
         <Route path="/teacher" element={<TeacherLayout />}>

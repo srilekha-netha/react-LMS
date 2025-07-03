@@ -1,129 +1,88 @@
-import React, { useEffect, useState, useCallback } from "react";
+// src/components/Reports.js
+import React, { useEffect, useState } from "react";
 import axios from "axios";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
+} from "recharts";
+import { saveAs } from "file-saver";
+import Papa from "papaparse";
 
-function Reports() {
-  const [reportData, setReportData] = useState(null);
-  const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [year, setYear] = useState(new Date().getFullYear());
-  const [loading, setLoading] = useState(true);
+export default function Reports() {
+  const [activeLearners, setActiveLearners] = useState(0);
+  const [engagement, setEngagement]         = useState([]);
+  const [completionRates, setCompletionRates] = useState([]);
 
-  // ✅ Stable reference for fetchReports
-  const fetchReports = useCallback(() => {
-    setLoading(true);
-    axios
-      .get(`/api/admin/reports?month=${month}&year=${year}`)
-      .then((res) => {
-        setReportData(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching reports:", err);
-        setLoading(false);
-      });
-  }, [month, year]);
-
+  // Fetch on mount
   useEffect(() => {
-    fetchReports();
-  }, [fetchReports]);
+    axios.get("/api/admin/reports/active-learners?since=2025-01-01")
+      .then(r => setActiveLearners(r.data.count))
+      .catch(console.error);
 
-  const handleExport = () => {
-    axios({
-      url: `/api/admin/reports/export?month=${month}&year=${year}`,
-      method: "GET",
-      responseType: "blob",
-    }).then((res) => {
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `report_${month}_${year}.csv`);
-      document.body.appendChild(link);
-      link.click();
-    });
+    axios.get("/api/admin/reports/engagement")
+      .then(r => setEngagement(r.data))
+      .catch(console.error);
+
+    axios.get("/api/admin/reports/completion-rates")
+      .then(r => setCompletionRates(r.data))
+      .catch(console.error);
+  }, []);
+
+  const exportCSV = (data, filename) => {
+    const csv = Papa.unparse(data);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, filename);
   };
 
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
-
   return (
-    <div className="container mt-4">
-      <h3>📊 Reports & Analytics</h3>
+    <div className="container py-4">
+      <h1>📊 Admin Reports</h1>
 
-      <div className="d-flex align-items-center gap-3 my-3">
-        <select
-          className="form-select w-auto"
-          value={month}
-          onChange={(e) => setMonth(parseInt(e.target.value))}
-        >
-          {months.map((m, idx) => (
-            <option key={idx + 1} value={idx + 1}>
-              {m}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="number"
-          className="form-control w-auto"
-          value={year}
-          onChange={(e) => setYear(parseInt(e.target.value))}
-        />
-
-        <button className="btn btn-outline-primary btn-sm" onClick={handleExport}>
-          <i className="bi bi-download me-1"></i> Export CSV
-        </button>
-      </div>
-
-      {loading ? (
-        <p>Loading report data...</p>
-      ) : reportData ? (
-        <div className="row">
-          <div className="col-md-4 mb-3">
-            <div className="card shadow">
-              <div className="card-body">
-                <h6>Active Users</h6>
-                <h4>{reportData.activeUsers}</h4>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-4 mb-3">
-            <div className="card shadow">
-              <div className="card-body">
-                <h6>Course Completions</h6>
-                <h4>{reportData.completedCourses}</h4>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-4 mb-3">
-            <div className="card shadow">
-              <div className="card-body">
-                <h6>Revenue (₹)</h6>
-                <h4>₹{reportData.revenue}</h4>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-12 mt-3">
-            <div className="card shadow">
-              <div className="card-body">
-                <h6>Engagement Summary</h6>
-                <p>
-                  Total Logins: {reportData.totalLogins} <br />
-                  Average Time on Platform: {reportData.avgTime} mins <br />
-                  Most Popular Course: {reportData.topCourse}
-                </p>
-              </div>
-            </div>
+      {/* Active Learners */}
+      <div className="row mb-4">
+        <div className="col">
+          <div className="alert alert-info">
+            Active Learners: <strong>{activeLearners}</strong>
           </div>
         </div>
-      ) : (
-        <p>No data available for selected month/year.</p>
-      )}
+      </div>
+
+      {/* Engagement Chart */}
+      <div className="mb-5">
+        <h3>Course Engagement</h3>
+        <button
+          className="btn btn-sm btn-outline-secondary mb-2"
+          onClick={() => exportCSV(engagement, "engagement.csv")}
+        >
+          Export CSV
+        </button>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={engagement}>
+            <XAxis dataKey="courseTitle" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="totalUnlocks" fill="#0d6efd" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Completion Rates Chart */}
+      <div className="mb-5">
+        <h3>Completion Rates (%)</h3>
+        <button
+          className="btn btn-sm btn-outline-secondary mb-2"
+          onClick={() => exportCSV(completionRates, "completion-rates.csv")}
+        >
+          Export CSV
+        </button>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={completionRates}>
+            <XAxis dataKey="title" />
+            <YAxis unit="%" />
+            <Tooltip />
+            <Bar dataKey="rate" fill="#198754" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
-
-export default Reports;

@@ -1,28 +1,25 @@
 // server/routes/payment.js
-const express = require("express");
+const express  = require("express");
 const Razorpay = require("razorpay");
-const crypto = require("crypto");
-const router = express.Router();
-const Payment = require("../models/Payment");
+const crypto   = require("crypto");
+const router   = express.Router();
+const Payment  = require("../models/Payment");
 
-// ✅ Razorpay instance (Test Mode)
+// 🔑 Your test keys
 const razorpay = new Razorpay({
-  key_id: "rzp_test_dGFALpaB5MZyZr",
+  key_id:     "rzp_test_dGFALpaB5MZyZr",
   key_secret: "xYtYqMFa9CoSVbDwL1X1JJ6p",
 });
 
-// ✅ Create Razorpay Order
+// POST /api/payments/create-order
 router.post("/create-order", async (req, res) => {
   const { amount } = req.body;
-
-  const options = {
-    amount: amount * 100, // in paise
-    currency: "INR",
-    receipt: `receipt_${Date.now()}`,
-  };
-
   try {
-    const order = await razorpay.orders.create(options);
+    const order = await razorpay.orders.create({
+      amount: amount * 100, // paise
+      currency: "INR",
+      receipt: `receipt_${Date.now()}`,
+    });
     res.json(order);
   } catch (err) {
     console.error("❌ Razorpay Order Error:", err);
@@ -30,34 +27,37 @@ router.post("/create-order", async (req, res) => {
   }
 });
 
-// ✅ Verify Payment Signature
+// POST /api/payments/verify
 router.post("/verify", async (req, res) => {
   const {
     razorpay_order_id,
     razorpay_payment_id,
     razorpay_signature,
-    studentId,
+    userId,    // ← we expect “userId” from client
     courseId,
     amount,
   } = req.body;
 
-  const key_secret = "xYtYqMFa9CoSVbDwL1X1JJ6p";
-  const hmac = crypto.createHmac("sha256", key_secret);
-  hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
-  const generatedSignature = hmac.digest("hex");
+  // 1. Signature check
+  const generatedSignature = crypto
+    .createHmac("sha256", razorpay.key_secret)
+    .update(razorpay_order_id + "|" + razorpay_payment_id)
+    .digest("hex");
 
   if (generatedSignature !== razorpay_signature) {
     return res.status(400).json({ message: "Invalid payment signature" });
   }
 
+  // 2. Save Payment document
   try {
     const payment = new Payment({
-      student: studentId,
-      course: courseId,
+      student:   userId,                       // now correct
+      course:    courseId,
       amount,
-      invoice: razorpay_order_id,
       paymentId: razorpay_payment_id,
-      status: "paid",
+      orderId:   razorpay_order_id,            // required by schema
+      invoice:   razorpay_order_id,            // if you want same as order
+      status:    "paid",
     });
 
     await payment.save();
@@ -68,13 +68,28 @@ router.post("/verify", async (req, res) => {
   }
 });
 
-// ✅ Get payments by user
+// GET /api/payments/user/:userId
 router.get("/user/:userId", async (req, res) => {
   try {
-    const payments = await Payment.find({ student: req.params.userId }).populate("course");
+    const payments = await Payment.find({ student: req.params.userId })
+      .populate("course", "title");
     res.json(payments);
   } catch (err) {
-    console.error("❌ Failed to fetch payments:", err);
+    console.error("❌ Failed to fetch user payments:", err);
+    res.status(500).json({ message: "Error fetching payments" });
+  }
+});
+
+// GET /api/payments/all
+router.get("/all", async (_req, res) => {
+  try {
+    const payments = await Payment.find()
+      .sort({ date: -1 })
+      .populate("student", "name email")
+      .populate("course", "title");
+    res.json(payments);
+  } catch (err) {
+    console.error("❌ Failed to fetch all payments:", err);
     res.status(500).json({ message: "Error fetching payments" });
   }
 });
