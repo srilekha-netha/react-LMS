@@ -162,7 +162,7 @@ function Register() {
           )}
 
           <p style={styles.footerText}>
-            Already have an account?{" "}
+            Already have an account?{' '}
             <a href="/" style={styles.link}>
               Login
             </a>
@@ -173,7 +173,6 @@ function Register() {
   );
 }
 
-// ✅ Styles (unchanged)
 const styles = {
   wrapper: {
     position: "relative",
@@ -203,59 +202,14 @@ const styles = {
     zIndex: 2,
     boxShadow: "0 0 20px rgba(0,0,0,0.4)",
   },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  heading: {
-    textAlign: "center",
-    marginBottom: "1.5rem",
-    color: "#fff",
-    fontSize: "28px",
-    fontWeight: "bold",
-  },
-  label: {
-    color: "#fff",
-    marginBottom: "5px",
-    fontWeight: "500",
-  },
-  input: {
-    padding: "10px 14px",
-    marginBottom: "15px",
-    borderRadius: "6px",
-    border: "none",
-    fontSize: "16px",
-  },
-  button: {
-    backgroundColor: "#4f46e5",
-    color: "#fff",
-    padding: "12px",
-    fontWeight: "bold",
-    fontSize: "16px",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-    marginBottom: "10px",
-  },
-  message: {
-    textAlign: "center",
-    marginBottom: "10px",
-    fontWeight: "bold",
-  },
-  footerText: {
-    marginTop: "1rem",
-    textAlign: "center",
-    color: "#f1f1f1",
-  },
-  link: {
-    color: "#90cdf4",
-    textDecoration: "none",
-    fontWeight: "500",
-  },
+  form: { display: "flex", flexDirection: "column" },
+  heading: { textAlign: "center", marginBottom: "1.5rem", color: "#fff", fontSize: "28px", fontWeight: "bold" },
+  label: { color: "#fff", marginBottom: "5px", fontWeight: "500" },
+  input: { padding: "10px 14px", marginBottom: "15px", borderRadius: "6px", border: "none", fontSize: "16px" },
+  button: { backgroundColor: "#4f46e5", color: "#fff", padding: "12px", fontWeight: "bold", fontSize: "16px", border: "none", borderRadius: "8px", cursor: "pointer", marginBottom: "10px" },
+  message: { textAlign: "center", marginBottom: "10px", fontWeight: "bold" },
+  footerText: { marginTop: "1rem", textAlign: "center", color: "#f1f1f1" },
+  link: { color: "#90cdf4", textDecoration: "none", fontWeight: "500" },
 };
 
-<<<<<<< HEAD
 export default Register;
-=======
-export default Register;
->>>>>>> fbd6d69c8e25ddd0059941aef24936dec5f7e1fa
