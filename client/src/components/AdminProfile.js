@@ -6,9 +6,12 @@ function AdminProfile() {
   const [profile, setProfile] = useState({
     name: "",
     email: "",
-    password: "",
     role: "admin",
   });
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const admin = JSON.parse(localStorage.getItem("user") || "{}");
@@ -22,34 +25,48 @@ function AdminProfile() {
     }
   }, [admin?._id]);
 
-  const handleChange = (e) => {
+  const handleProfileChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setMessage("");
     setError("");
 
     try {
-      // ✅ Update name/email/role
       await axios.put(`http://localhost:5000/api/users/${admin._id}`, {
         name: profile.name,
         email: profile.email,
         role: profile.role,
       });
-
-      // ✅ Optional: Change password
-      if (profile.password.trim()) {
-        await axios.post(`http://localhost:5000/api/users/${admin._id}/change-password`, {
-          oldPassword: "admin", // replace with real auth logic
-          newPassword: profile.password,
-        });
-      }
-
       setMessage("Profile updated successfully");
     } catch (err) {
       setError("❌ Update failed. Please try again.");
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setError("");
+
+    if (newPassword !== confirmPassword) {
+      return setError("❌ New password and confirm password do not match.");
+    }
+
+    try {
+      await axios.post(`http://localhost:5000/api/users/${admin._id}/change-password`, {
+        oldPassword: currentPassword,
+        newPassword,
+      });
+
+      setMessage("🔐 Password changed successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      setError("❌ Failed to change password. Please try again.");
     }
   };
 
@@ -61,14 +78,14 @@ function AdminProfile() {
           {message && <Alert variant="success">{message}</Alert>}
           {error && <Alert variant="danger">{error}</Alert>}
 
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleUpdateProfile}>
             <Form.Group className="mb-3">
               <Form.Label>Name</Form.Label>
               <Form.Control
                 type="text"
                 name="name"
                 value={profile.name}
-                onChange={handleChange}
+                onChange={handleProfileChange}
               />
             </Form.Group>
 
@@ -78,17 +95,7 @@ function AdminProfile() {
                 type="email"
                 name="email"
                 value={profile.email}
-                onChange={handleChange}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>New Password (optional)</Form.Label>
-              <Form.Control
-                type="password"
-                name="password"
-                value={profile.password}
-                onChange={handleChange}
+                onChange={handleProfileChange}
               />
             </Form.Group>
 
@@ -97,7 +104,7 @@ function AdminProfile() {
               <Form.Select
                 name="role"
                 value={profile.role}
-                onChange={handleChange}
+                onChange={handleProfileChange}
               >
                 <option value="admin">Admin</option>
                 <option value="sub-admin">Sub-Admin</option>
@@ -106,6 +113,45 @@ function AdminProfile() {
 
             <Button variant="primary" type="submit">
               Update Profile
+            </Button>
+          </Form>
+
+          <hr />
+
+          <h6 className="mt-4">🔑 Change Password</h6>
+          <Form onSubmit={handlePasswordChange}>
+            <Form.Group className="mb-3">
+              <Form.Label>Current Password</Form.Label>
+              <Form.Control
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>New Password</Form.Label>
+              <Form.Control
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Confirm New Password</Form.Label>
+              <Form.Control
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </Form.Group>
+
+            <Button variant="warning" type="submit">
+              Change Password
             </Button>
           </Form>
         </Card.Body>
