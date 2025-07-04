@@ -14,9 +14,7 @@ function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/admin/users"
-      );
+      const res = await axios.get("http://localhost:5000/api/admin/users");
       setUsers(res.data);
     } catch (err) {
       console.error("❌ Failed to fetch users:", err);
@@ -50,22 +48,21 @@ function UserManagement() {
   const handleDelete = async (userId) => {
     if (!window.confirm("Delete this user?")) return;
     try {
-      await axios.delete(
-        `http://localhost:5000/api/admin/users/${userId}`
-      );
+      await axios.delete(`http://localhost:5000/api/admin/users/${userId}`);
       await fetchUsers();
     } catch {
       alert("Failed to delete user");
     }
   };
 
-  // apply client-side role & search filters
+  // ✅ Safe filter logic to avoid undefined .toLowerCase()
   const filtered = users.filter((u) => {
-    const byRole =
-      filterRole === "all" || u.role === filterRole;
+    const byRole = filterRole === "all" || u.role === filterRole;
+    const name = u.name || "";
+    const email = u.email || "";
     const byText =
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
+      name.toLowerCase().includes(search.toLowerCase()) ||
+      email.toLowerCase().includes(search.toLowerCase());
     return byRole && byText;
   });
 
@@ -73,7 +70,6 @@ function UserManagement() {
     <div className="container-fluid">
       <h2 className="mb-4 fw-bold">👥 User Management</h2>
 
-      {/* dropdown + search in one row */}
       <div className="d-flex mb-3 align-items-center">
         <select
           className="form-select form-select-sm me-2"
@@ -110,8 +106,8 @@ function UserManagement() {
             {filtered.length > 0 ? (
               filtered.map((user) => (
                 <tr key={user._id}>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
+                  <td>{user.name || "N/A"}</td>
+                  <td>{user.email || "N/A"}</td>
                   <td>
                     <select
                       className="form-select form-select-sm"
