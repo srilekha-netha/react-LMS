@@ -14,9 +14,7 @@ function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/admin/users"
-      );
+      const res = await axios.get("http://localhost:5000/api/admin/users");
       setUsers(res.data);
     } catch (err) {
       console.error("❌ Failed to fetch users:", err);
@@ -50,22 +48,22 @@ function UserManagement() {
   const handleDelete = async (userId) => {
     if (!window.confirm("Delete this user?")) return;
     try {
-      await axios.delete(
-        `http://localhost:5000/api/admin/users/${userId}`
-      );
+      await axios.delete(`http://localhost:5000/api/admin/users/${userId}`);
       await fetchUsers();
     } catch {
       alert("Failed to delete user");
     }
   };
 
-  // apply client-side role & search filters
+  // apply client-side role & search filters, with guards against undefined
   const filtered = users.filter((u) => {
-    const byRole =
-      filterRole === "all" || u.role === filterRole;
-    const byText =
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
+    const byRole = filterRole === "all" || u.role === filterRole;
+
+    const needle = search.toLowerCase();
+    const name  = (u.name  || "").toLowerCase();
+    const email = (u.email || "").toLowerCase();
+    const byText = name.includes(needle) || email.includes(needle);
+
     return byRole && byText;
   });
 
@@ -110,8 +108,8 @@ function UserManagement() {
             {filtered.length > 0 ? (
               filtered.map((user) => (
                 <tr key={user._id}>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
+                  <td>{user.name || "-"}</td>
+                  <td>{user.email || "-"}</td>
                   <td>
                     <select
                       className="form-select form-select-sm"

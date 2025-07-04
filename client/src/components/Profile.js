@@ -1,3 +1,4 @@
+// src/components/Profile.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -27,7 +28,7 @@ function Profile() {
         expertise: user.expertise || "",
       });
     }
-  }, []);
+  }, [user]); // added `user` here
 
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -44,7 +45,6 @@ function Profile() {
         bio: profile.bio,
         expertise: profile.expertise,
       });
-
       setMessage("✅ Profile updated successfully!");
     } catch (err) {
       setError("❌ Failed to update profile.");
@@ -61,11 +61,13 @@ function Profile() {
     }
 
     try {
-      await axios.post(`http://localhost:5000/api/users/${user._id}/change-password`, {
-        oldPassword: currentPassword,
-        newPassword,
-      });
-
+      await axios.post(
+        `http://localhost:5000/api/users/${user._id}/change-password`,
+        {
+          oldPassword: currentPassword,
+          newPassword,
+        }
+      );
       setMessage("🔐 Password changed successfully.");
       setCurrentPassword("");
       setNewPassword("");
