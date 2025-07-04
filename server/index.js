@@ -7,7 +7,7 @@ const path = require("path");
 const app = express();
 
 // ✅ Enable CORS for frontend
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 
 // ✅ Middleware
 app.use(express.json());
@@ -22,7 +22,7 @@ mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/lms", {
 .catch((err) => console.log("MongoDB connection error:", err));
 
 // ✅ API Routes
-app.use("/api/auth", require("./routes/auth"));
+app.use("/api/auth", require("./routes/auth")); // Contains OTP routes now
 app.use("/api/courses", require("./routes/course"));
 app.use("/api/enrollments", require("./routes/enrollment"));
 app.use("/api/assignments", require("./routes/assignment"));
@@ -30,8 +30,7 @@ app.use("/api/coupons", require("./routes/coupon"));
 app.use("/api/notifications", require("./routes/notification"));
 app.use("/api/users", require("./routes/user"));
 app.use("/api/payments", require("./routes/payment"));
-
-app.use("/api/messages", require("./routes/message")); // ✅ Correct single import for messaging
+app.use("/api/messages", require("./routes/message"));
 
 // ✅ Health check
 app.get("/", (req, res) => res.send("LMS API running"));
