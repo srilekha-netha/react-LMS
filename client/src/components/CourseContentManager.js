@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useParams } from "react-router-dom";
+import axios from "axios";
 import "./StudentDashboard.css";
 
 function CourseContentManager() {
@@ -10,6 +10,7 @@ function CourseContentManager() {
   const [showAdd, setShowAdd] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
   const [showAssignment, setShowAssignment] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
   const [chapterForm, setChapterForm] = useState({
     title: "",
     content: "",
@@ -61,36 +62,72 @@ function CourseContentManager() {
     });
   };
 
+  const handleDeleteChapter = async (chapterIndex) => {
+    if (!window.confirm("Are you sure you want to delete this chapter?")) return;
+    try {
+      const res = await axios.delete(`http://localhost:5000/api/courses/${id}/chapter/${chapterIndex}`);
+      setChapters(res.data.chapters);
+      setMessage("🗑️ Chapter deleted.");
+      setSuccess(true);
+      setTimeout(() => setMessage(""), 2500);
+    } catch (err) {
+      setMessage("❌ Failed to delete chapter");
+      setSuccess(false);
+      setTimeout(() => setMessage(""), 3000);
+    }
+  };
+
+  const handleEditChapter = (chapterIndex) => {
+    const chapter = chapters[chapterIndex];
+    setChapterForm({
+      title: chapter.title,
+      content: chapter.content,
+      video: null,
+      pdf: null,
+      quiz: chapter.quiz || [{ question: "", options: ["", "", "", ""], answer: "" }],
+      assignment: chapter.assignmentQuestion || ""
+    });
+    setEditingIndex(chapterIndex);
+    setShowAdd(true);
+    setShowQuiz(!!chapter.quiz?.length);
+    setShowAssignment(!!chapter.assignmentQuestion);
+  };
+
   const handleAddChapter = async (e) => {
     e.preventDefault();
+
     const formData = new FormData();
     formData.append("title", chapterForm.title);
     formData.append("content", chapterForm.content);
     if (chapterForm.video) formData.append("video", chapterForm.video);
     if (chapterForm.pdf) formData.append("pdf", chapterForm.pdf);
     if (showQuiz) formData.append("quiz", JSON.stringify(chapterForm.quiz));
-    if (showAssignment) formData.append("assignmentQuestion", chapterForm.assignment); // ✅ FIXED
+    if (showAssignment) formData.append("assignmentQuestion", chapterForm.assignment);
 
     try {
-      const res = await axios.post(
-        `http://localhost:5000/api/courses/${id}/add-chapter`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const endpoint = editingIndex === null
+        ? `http://localhost:5000/api/courses/${id}/add-chapter`
+        : `http://localhost:5000/api/courses/${id}/edit-chapter/${editingIndex}`;
+
+      const res = await axios.post(endpoint, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
       setChapters(res.data.chapters);
       setChapterForm({
         title: "",
         content: "",
         video: null,
         pdf: null,
-        quiz: [{ question: "", options: ["", "", "", ""] },],
+        quiz: [{ question: "", options: ["", "", "", ""], answer: "" }],
         assignment: ""
       });
-      setMessage("✅ Chapter added successfully!");
+      setMessage(editingIndex === null ? "✅ Chapter added!" : "✅ Chapter updated!");
       setSuccess(true);
       setShowAdd(false);
       setShowQuiz(false);
       setShowAssignment(false);
+      setEditingIndex(null);
       setTimeout(() => setMessage(""), 2500);
     } catch (err) {
       setMessage("❌ Error: " + (err.response?.data?.message || err.message));
@@ -119,52 +156,60 @@ function CourseContentManager() {
               <div>
                 <strong>{ch.title}</strong>
                 {ch.videoUrl && (
-                  <span className="ms-2">
-                    <a href={`http://localhost:5000${ch.videoUrl}`} target="_blank" rel="noreferrer" className="content-mgr-link">
-                      <i className="bi bi-play-circle-fill me-1"></i>Video
-                    </a>
-                  </span>
+                  <a href={`http://localhost:5000${ch.videoUrl}`} target="_blank" rel="noreferrer" className="ms-2">
+                    🎥 Video
+                  </a>
                 )}
                 {ch.pdfUrl && (
-                  <span className="ms-2">
-                    <a href={`http://localhost:5000${ch.pdfUrl}`} target="_blank" rel="noreferrer" className="content-mgr-link">
-                      <i className="bi bi-file-earmark-pdf-fill me-1"></i>PDF
-                    </a>
-                  </span>
+                  <a href={`http://localhost:5000${ch.pdfUrl}`} target="_blank" rel="noreferrer" className="ms-2">
+                    📄 PDF
+                  </a>
                 )}
               </div>
-              <span className={`badge content-mgr-badge px-3 py-1 ${ch.locked ? "bg-warning text-dark" : "bg-success"}`}>
-                {ch.locked ? "Locked" : "Unlocked"}
-              </span>
+              <div className="btn-group">
+                <button className="btn btn-sm btn-outline-primary" onClick={() => handleEditChapter(idx)}>
+                  ✏️ Edit
+                </button>
+                <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteChapter(idx)}>
+                  🗑️ Delete
+                </button>
+              </div>
             </div>
-
             <div className="content-mgr-content mb-2">{ch.content}</div>
-
             {ch.assignmentQuestion && (
               <div>
-                <b className="me-2">📝 Assignment:</b>
+                <b>📝 Assignment:</b> {ch.assignmentQuestion}
+              </div>
+            )}
+            {ch.quiz && ch.quiz.length > 0 && (
+              <div>
+                <b>🧠 Quiz:</b>
                 <ul className="ps-3">
-                  <li>{ch.assignmentQuestion}</li>
+                  {ch.quiz.map((q, qi) => (
+                    <li key={qi}>{q.question}</li>
+                  ))}
                 </ul>
               </div>
             )}
-
-            <div>
-              <b className="me-2">Quiz:</b>
-              <ul className="ps-3">
-                {ch.quiz && ch.quiz.map((q, qi) => (
-                  <li key={qi} className="mb-1">{q.question}</li>
-                ))}
-              </ul>
-            </div>
           </li>
         ))}
       </ul>
 
       <div className="d-flex justify-content-center mb-4">
         <button
-          className={`btn btn-lg btn-primary px-5 content-mgr-add-btn ${showAdd ? "active" : ""}`}
-          onClick={() => setShowAdd(!showAdd)}
+          className="btn btn-lg btn-primary px-5"
+          onClick={() => {
+            setShowAdd(!showAdd);
+            setEditingIndex(null);
+            setChapterForm({
+              title: "",
+              content: "",
+              video: null,
+              pdf: null,
+              quiz: [{ question: "", options: ["", "", "", ""], answer: "" }],
+              assignment: ""
+            });
+          }}
         >
           {showAdd ? "Close" : "Add New Chapter"}
         </button>
@@ -176,7 +221,7 @@ function CourseContentManager() {
           className="card p-4 shadow-sm mb-5 content-mgr-form"
           encType="multipart/form-data"
         >
-          <h5 className="mb-3 fw-semibold text-primary">Add Chapter</h5>
+          <h5 className="mb-3 fw-semibold text-primary">{editingIndex !== null ? "Edit Chapter" : "Add Chapter"}</h5>
           <div className="row g-3">
             <div className="col-md-6">
               <input
@@ -220,18 +265,10 @@ function CourseContentManager() {
           </div>
 
           <div className="d-flex align-items-center gap-2 mt-3">
-            <button
-              type="button"
-              className={`btn btn-outline-secondary btn-sm ${showQuiz ? "active" : ""}`}
-              onClick={() => setShowQuiz(v => !v)}
-            >
+            <button type="button" className={`btn btn-outline-secondary btn-sm ${showQuiz ? "active" : ""}`} onClick={() => setShowQuiz(!showQuiz)}>
               {showQuiz ? "Hide Quiz" : "Add Quiz"}
             </button>
-            <button
-              type="button"
-              className={`btn btn-outline-secondary btn-sm ${showAssignment ? "active" : ""}`}
-              onClick={() => setShowAssignment(v => !v)}
-            >
+            <button type="button" className={`btn btn-outline-secondary btn-sm ${showAssignment ? "active" : ""}`} onClick={() => setShowAssignment(!showAssignment)}>
               {showAssignment ? "Hide Assignment" : "Add Assignment"}
             </button>
           </div>
@@ -269,11 +306,7 @@ function CourseContentManager() {
                   />
                 </div>
               ))}
-              <button
-                type="button"
-                className="btn btn-outline-primary btn-sm"
-                onClick={addQuizQuestion}
-              >
+              <button type="button" className="btn btn-outline-primary btn-sm" onClick={addQuizQuestion}>
                 + Add Another Question
               </button>
             </div>
@@ -286,7 +319,7 @@ function CourseContentManager() {
                 value={chapterForm.assignment}
                 onChange={handleChapterChange}
                 className="form-control"
-                placeholder="Enter assignment question for this chapter"
+                placeholder="Enter assignment question"
                 rows={3}
               />
             </div>
@@ -294,7 +327,7 @@ function CourseContentManager() {
 
           <div className="d-flex mt-4">
             <button type="submit" className="btn btn-success ms-auto">
-              Add Chapter
+              {editingIndex !== null ? "Update Chapter" : "Add Chapter"}
             </button>
           </div>
         </form>
