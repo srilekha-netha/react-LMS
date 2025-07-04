@@ -1,38 +1,49 @@
+// src/components/Earnings.js
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+
+// Move fake data to module scope so it's not a hook dependency
+const fakeSummary = {
+  total: 125000,
+  redeemedCoupons: 45,
+  reportUrl: "/downloads/june-earnings.pdf",
+};
+
+const fakeStudentPayments = [
+  {
+    student: "Alice Johnson",
+    courses: [
+      { title: "React Basics", paid: true, amount: 499, date: "2025-06-21" },
+      { title: "Advanced CSS", paid: true, amount: 299, date: "2025-06-23" },
+    ],
+  },
+  {
+    student: "Bob Smith",
+    courses: [
+      { title: "Node.js Mastery", paid: false, amount: 799, date: null },
+    ],
+  },
+  {
+    student: "Carlos Rivera",
+    courses: [
+      { title: "Python for Data Science", paid: true, amount: 999, date: "2025-06-15" },
+      { title: "Machine Learning 101", paid: false, amount: 1199, date: null },
+    ],
+  },
+];
 
 function Earnings() {
-  const [summary, setSummary] = useState({
-    total: 0,
-    redeemedCoupons: 0,
-    reportUrl: "#",
-  });
+  const [summary, setSummary] = useState({ total: 0, redeemedCoupons: 0, reportUrl: "#" });
   const [studentPayments, setStudentPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const user = JSON.parse(localStorage.getItem("user")); // teacher
-
   useEffect(() => {
-    if (!user?._id) return;
-
-    // Fetch summary
-    axios
-      .get(`http://localhost:5000/api/teacher/earnings/summary/${user._id}`)
-      .then((res) => setSummary(res.data))
-      .catch((err) => console.error("❌ Earnings summary error:", err));
-
-    // Fetch student payments
-    axios
-      .get(`http://localhost:5000/api/teacher/earnings/by-student/${user._id}`)
-      .then((res) => {
-        setStudentPayments(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("❌ Student payment error:", err);
-        setLoading(false);
-      });
-  }, [user]);
+    // simulate loading delay
+    setTimeout(() => {
+      setSummary(fakeSummary);
+      setStudentPayments(fakeStudentPayments);
+      setLoading(false);
+    }, 500);
+  }, []); // no more warnings
 
   return (
     <div className="container mt-4">
@@ -45,22 +56,21 @@ function Earnings() {
           <p className="card-text mb-2">
             <strong>Total Earnings:</strong>{" "}
             <span className="fs-4 text-success">
-              ₹{summary.total?.toLocaleString() || 0}
+              ₹{summary.total.toLocaleString()}
             </span>
           </p>
           <p className="card-text mb-3">
             <strong>Coupons Redeemed:</strong>{" "}
             <span className="badge bg-primary">
-              {summary.redeemedCoupons || 0}
+              {summary.redeemedCoupons}
             </span>
           </p>
           <hr />
           <a
-            href={summary.reportUrl || "#"}
+            href={summary.reportUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-outline-primary"
-            disabled={!summary.reportUrl}
+            className={`btn btn-outline-primary${!summary.reportUrl ? " disabled" : ""}`}
           >
             <i className="bi bi-download me-1"></i> Download Report
           </a>
@@ -83,16 +93,16 @@ function Earnings() {
                 <th>Student Name</th>
                 <th>Course</th>
                 <th>Payment Status</th>
-                <th>Amount</th>
+                <th>Amount (₹)</th>
                 <th>Payment Date</th>
               </tr>
             </thead>
             <tbody>
-              {studentPayments.map((entry, index) =>
+              {studentPayments.map((entry, idx) =>
                 entry.courses.map((course, i) => (
-                  <tr key={`${index}-${i}`}>
+                  <tr key={`${idx}-${i}`}>
                     {i === 0 && (
-                      <td rowSpan={entry.courses.length}>{index + 1}</td>
+                      <td rowSpan={entry.courses.length}>{idx + 1}</td>
                     )}
                     {i === 0 && (
                       <td rowSpan={entry.courses.length}>{entry.student}</td>
@@ -102,15 +112,13 @@ function Earnings() {
                       {course.paid ? (
                         <span className="badge bg-success">Paid</span>
                       ) : (
-                        <span className="badge bg-warning text-dark">
-                          Pending
-                        </span>
+                        <span className="badge bg-warning text-dark">Pending</span>
                       )}
                     </td>
-                    <td>₹{course.amount}</td>
+                    <td>{course.amount.toLocaleString()}</td>
                     <td>
                       {course.date
-                        ? new Date(course.date).toLocaleDateString()
+                        ? new Date(course.date).toLocaleDateString("en-IN")
                         : "—"}
                     </td>
                   </tr>
