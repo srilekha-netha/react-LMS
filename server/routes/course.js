@@ -1,153 +1,250 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useLocation } from "react-router-dom";
-import axios from "axios";
-import "./ExploreCourses.css";  // <— fixed import
+const express = require('express');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const mongoose = require('mongoose');
+const Course = require('../models/Course');
+const User = require('../models/User');
 
-export default function CourseDetails() {
-  const { search } = useLocation();
-  const courseId = new URLSearchParams(search).get("id");
+const router = express.Router();
 
-  const [course, setCourse] = useState(null);
-  const [activeChapter, setActiveChapter] = useState(null);
-  const [unlocked, setUnlocked] = useState(1);
-  const [error, setError] = useState(null);
+// Ensure upload directories exist
+['uploads', 'uploads/thumbnails', 'uploads/chapter_files', 'uploads/others'].forEach(folder => {
+  if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
+});
 
-  const [videoDone, setVideoDone] = useState(false);
-  const [quizAnswers, setQuizAnswers] = useState({});
-
-  const videoRef = useRef(null);
-
-  useEffect(() => {
-    if (!courseId) {
-      setError("No course ID provided");
-      return;
+// Configure Multer storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    if (file.fieldname === "thumbnail") {
+      cb(null, 'uploads/thumbnails/');
+    } else if (file.fieldname === "video" || file.fieldname === "pdf") {
+      cb(null, 'uploads/chapter_files/');
+    } else {
+      cb(null, 'uploads/others/');
     }
-    // 1) Fetch course
-    axios.get(`/api/courses/${courseId}`)
-      .then(res => {
-        setCourse(res.data);
-        setActiveChapter(res.data.chapters[0]);
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage });
+
+// ✅ Test Route
+router.get('/test', (req, res) => {
+  res.send('Course route is working!');
+});
+
+// ✅ Create Course
+router.post('/create', upload.single('thumbnail'), async (req, res) => {
+  try {
+    const { title, description, category, difficulty, price, teacher } = req.body;
+    const thumbnail = req.file ? req.file.filename : '';
+    const newCourse = new Course({
+      title,
+      description,
+      category,
+      difficulty,
+      price,
+      teacher,
+      thumbnail,
+      published: true,
+    });
+    await newCourse.save();
+    res.status(201).json({ message: 'Course created!', course: newCourse });
+  } catch (err) {
+    res.status(500).json({ message: 'Error creating course', error: err.message });
+  }
+});
+
+// ✅ Get all courses by teacher
+router.get('/teacher/:teacherId', async (req, res) => {
+  try {
+    const courses = await Course.find({ teacher: req.params.teacherId });
+    res.json(courses);
+  } catch (err) {
+    res.status(500).json({ message: 'Error getting courses', error: err.message });
+  }
+});
+
+// ✅ Get all courses
+router.get('/', async (req, res) => {
+  try {
+    const courses = await Course.find();
+    const result = await Promise.all(
+      courses.map(async (course) => {
+        let teacherName = "Unknown";
+        try {
+          const teacher = await User.findById(course.teacher).select("name");
+          if (teacher) teacherName = teacher.name;
+        } catch (err) {
+          console.warn(`⚠️ Could not fetch teacher for course ${course._id}:`, err.message);
+        }
+
+        return {
+          id: course._id,
+          title: course.title,
+          description: course.description || "No description",
+          price: Number(course.price),
+          difficulty: course.difficulty,
+          thumbnail: course.thumbnail,
+          teacher: course.teacher,
+          teacherName: teacherName,
+          published: course.published
+        };
       })
-      .catch(() => setError("Failed to load course"));
+    );
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error("🔥 Error in /:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+});
 
-    // 2) Fetch progress
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (user._id) {
-      axios.get(`/api/enrollments/progress/${user._id}/${courseId}`)
-        .then(res => setUnlocked(res.data.chaptersUnlocked))
-        .catch(() => {/* ignore */});
+// ✅ Get course by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+    res.json(course);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// ✅ Add Chapter with Assignment
+router.post('/:id/add-chapter', upload.fields([
+  { name: 'video', maxCount: 1 },
+  { name: 'pdf', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const { title, content, quiz, assignmentQuestion } = req.body;
+
+    const course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    const videoUrl = req.files['video'] ? '/uploads/chapter_files/' + req.files['video'][0].filename : '';
+    const pdfUrl = req.files['pdf'] ? '/uploads/chapter_files/' + req.files['pdf'][0].filename : '';
+    const quizArr = quiz ? JSON.parse(quiz) : [];
+
+    course.chapters.push({
+      title,
+      content,
+      videoUrl,
+      pdfUrl,
+      quiz: quizArr,
+      assignmentQuestion: assignmentQuestion || "",
+      locked: true
+    });
+
+    await course.save();
+    res.status(201).json({ message: "Chapter added", chapters: course.chapters });
+  } catch (err) {
+    res.status(500).json({ message: "Error adding chapter", error: err.message });
+  }
+});
+
+// ✅ Edit Chapter by Index
+router.post('/:id/edit-chapter/:chapterIdx', upload.fields([
+  { name: 'video', maxCount: 1 },
+  { name: 'pdf', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const { id, chapterIdx } = req.params;
+    const { title, content, quiz, assignmentQuestion } = req.body;
+
+    const course = await Course.findById(id);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    const chapter = course.chapters[chapterIdx];
+    if (!chapter) return res.status(404).json({ message: "Chapter not found" });
+
+    // Update basic fields
+    chapter.title = title;
+    chapter.content = content;
+    chapter.assignmentQuestion = assignmentQuestion || "";
+    chapter.quiz = quiz ? JSON.parse(quiz) : [];
+
+    // Update files if provided
+    if (req.files['video']) {
+      chapter.videoUrl = '/uploads/chapter_files/' + req.files['video'][0].filename;
     }
-  }, [courseId]);
+    if (req.files['pdf']) {
+      chapter.pdfUrl = '/uploads/chapter_files/' + req.files['pdf'][0].filename;
+    }
 
-  if (error)   return <div className="cd-error">{error}</div>;
-  if (!course) return <div className="cd-loading">Loading…</div>;
+    await course.save();
+    res.status(200).json({ message: "Chapter updated", chapters: course.chapters });
+  } catch (err) {
+    res.status(500).json({ message: "Error editing chapter", error: err.message });
+  }
+});
 
-  const total = course.chapters.length;
-  const percent = Math.round((unlocked / total) * 100);
+// ✅ Delete Chapter by Index
+router.delete('/:id/chapter/:chapterIdx', async (req, res) => {
+  try {
+    const { id, chapterIdx } = req.params;
+    const course = await Course.findById(id);
+    if (!course) return res.status(404).json({ message: "Course not found" });
 
-  // mark video done
-  const handleVideoEnd = () => setVideoDone(true);
+    course.chapters.splice(chapterIdx, 1);
+    await course.save();
+    res.status(200).json({ message: "Chapter deleted", chapters: course.chapters });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting chapter", error: err.message });
+  }
+});
 
-  // collect quiz answers
-  const handleQuizChange = (idx, opt) => {
-    setQuizAnswers(prev => ({ ...prev, [idx]: opt }));
-  };
+// ✅ Submit Quiz
+router.post('/:id/submit-quiz/:chapterIdx', async (req, res) => {
+  try {
+    const { userId, answers } = req.body;
+    const course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ message: "Course not found" });
 
-  // submit quiz to server
-  const submitQuiz = () => {
-    const chapterIdx = course.chapters.findIndex(c => c._id === activeChapter._id);
-    axios.post(`/api/courses/${courseId}/submit-quiz/${chapterIdx}`, {
-      userId: JSON.parse(localStorage.getItem("user"))._id,
-      answers: quizAnswers
-    })
-    .then(({ data }) => {
-      if (data.passed) {
-        // unlock next
-        axios.post(`/api/enrollments/unlock/${JSON.parse(localStorage.getItem("user"))._id}/${courseId}`)
-          .then(res => setUnlocked(res.data.chaptersUnlocked));
-        alert("🎉 Quiz passed! Next chapter unlocked.");
-      } else {
-        alert(`❌ You scored ${data.score}/${data.total}. Need ≥70% to pass.`);
-      }
-    })
-    .catch(() => alert("Error submitting quiz"));
-  };
+    const chapterIdx = parseInt(req.params.chapterIdx, 10);
+    const quiz = course.chapters[chapterIdx]?.quiz || [];
+    let score = 0;
+    quiz.forEach((q, idx) => {
+      if (answers[idx] && answers[idx].toLowerCase() === q.answer.toLowerCase()) score++;
+    });
+    const percent = quiz.length > 0 ? Math.round((score / quiz.length) * 100) : 0;
+    const passed = percent >= 70;
+    res.json({ score, percent, passed, total: quiz.length });
+  } catch (err) {
+    res.status(500).json({ message: "Error submitting quiz", error: err.message });
+  }
+});
 
-  return (
-    <div className="cd-container">
-      <aside className="cd-sidebar">
-        <h5>Chapters</h5>
-        <div className="cd-progress-bar">
-          <div className="cd-progress-filled" style={{ width: `${percent}%` }} />
-        </div>
-        <ul>
-          {course.chapters.map((ch, i) => {
-            const isOpen = i < unlocked;
-            const isActive = activeChapter._id === ch._id;
-            return (
-              <li key={ch._id}
-                  className={`${isActive?"active":""} ${isOpen?"":"locked"}`}
-                  onClick={() => isOpen && setActiveChapter(ch)}>
-                {ch.title}
-              </li>
-            );
-          })}
-        </ul>
-      </aside>
+// ✅ Update Course (excluding chapters)
+router.put('/:id', upload.single('thumbnail'), async (req, res) => {
+  try {
+    const updateData = { ...req.body };
+    if (req.file) updateData.thumbnail = req.file.filename;
+    if (typeof updateData.published !== "undefined") {
+      updateData.published = updateData.published === 'true' || updateData.published === true;
+    }
+    delete updateData.chapters;
+    delete updateData.teacher;
 
-      <main className="cd-content">
-        <div className="cd-card">
-          <h3>{activeChapter.title}</h3>
+    const updated = await Course.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    if (!updated) return res.status(404).json({ message: 'Course not found' });
 
-          {activeChapter.videoUrl && (
-            <video
-              ref={videoRef}
-              src={activeChapter.videoUrl}
-              controls
-              onEnded={handleVideoEnd}
-              className="cd-video"
-            />
-          )}
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating course', error: err.message });
+  }
+});
 
-          {videoDone && activeChapter.pdfUrl && (
-            <a
-              href={activeChapter.pdfUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cd-btn cd-btn-pdf"
-            >
-              Download PDF
-            </a>
-          )}
+// ✅ Delete Course
+router.delete('/:id', async (req, res) => {
+  try {
+    const deleted = await Course.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Course not found" });
+    res.json({ message: "Course deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting course", error: err.message });
+  }
+});
 
-          <div className="cd-section">
-            <h5>Quiz</h5>
-            {activeChapter.quiz.map((q, idx) => (
-              <div key={idx} className="cd-quiz-question">
-                <p>{q.question}</p>
-                {q.options.map(opt => (
-                  <label key={opt}>
-                    <input
-                      type="radio"
-                      name={`quiz${idx}`}
-                      onChange={() => handleQuizChange(idx, opt)}
-                      disabled={!videoDone}
-                    />
-                    {" "}{opt}
-                  </label>
-                ))}
-              </div>
-            ))}
-            <button
-              onClick={submitQuiz}
-              disabled={!videoDone}
-              className="cd-btn cd-btn-quiz"
-            >
-              Submit Quiz
-            </button>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
+module.exports = router;

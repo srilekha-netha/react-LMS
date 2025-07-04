@@ -1,148 +1,186 @@
-// src/components/CourseDetails.js
-import React, { useEffect, useState, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "./ExploreCourses.css";
+import { useLocation } from "react-router-dom";
 
-export default function CourseDetails() {
-  const { search } = useLocation();
-  const courseId = new URLSearchParams(search).get("id");
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 
+function CourseDetails() {
   const [course, setCourse] = useState(null);
-  const [activeChapter, setActiveChapter] = useState(null);
-  const [unlocked, setUnlocked] = useState(1);
-  const [error, setError] = useState(null);
+  const [enrollment, setEnrollment] = useState(null);
+  const [currentChapter, setCurrentChapter] = useState(0);
+  const [videoWatched, setVideoWatched] = useState(false);
+  const [pdfViewed, setPdfViewed] = useState(false);
+  const [answers, setAnswers] = useState([]);
+  const [quizResult, setQuizResult] = useState(null);
 
-  const [videoDone, setVideoDone] = useState(false);
-  const [quizAnswers, setQuizAnswers] = useState({});
-
-  const videoRef = useRef(null);
+  const user = JSON.parse(localStorage.getItem("user"));
+  const query = useQuery();
+  const courseId = query.get("id");
 
   useEffect(() => {
-    if (!courseId) {
-      setError("No course ID provided");
-      return;
-    }
-    // Fetch course
-    axios.get(`http://localhost:5000/api/courses/${courseId}`)
-      .then(res => {
-        setCourse(res.data);
-        setActiveChapter(res.data.chapters[0]);
-      })
-      .catch(err => {
-        console.error('Course fetch error:', err);
-        setError('Failed to load course');
+    const fetchData = async () => {
+      const courseRes = await axios.get(`http://localhost:5000/api/courses/${courseId}`);
+      const enrollRes = await axios.get(`http://localhost:5000/api/enrollments/byUserAndCourse/${user._id}/${courseId}`);
+      setCourse(courseRes.data);
+      setEnrollment(enrollRes.data);
+      setCurrentChapter(Math.max(enrollRes.data.chaptersUnlocked - 1, 0));
+    };
+    fetchData();
+  }, [courseId, user._id]);
+
+  const handleAnswerChange = (idx, value) => {
+    const newAnswers = [...answers];
+    newAnswers[idx] = value;
+    setAnswers(newAnswers);
+  };
+
+  const handleSubmitQuiz = async (chapterIdx) => {
+    try {
+      const res = await axios.post(`http://localhost:5000/api/courses/${courseId}/submit-quiz/${chapterIdx}`, {
+        userId: user._id,
+        answers,
       });
-
-    // Fetch progress
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (user._id) {
-      axios.get(`http://localhost:5000/api/enrollments/progress/${user._id}/${courseId}`)
-        .then(res => setUnlocked(res.data.chaptersUnlocked))
-        .catch(err => console.error('Progress fetch error:', err));
+      setQuizResult(res.data);
+    } catch (err) {
+      alert("❌ Quiz submission failed");
     }
-  }, [courseId]);
-
-  if (error) return <div className="cd-error">{error}</div>;
-  if (!course) return <div className="cd-loading">Loading…</div>;
-
-  const total = course.chapters.length;
-  const percent = Math.round((unlocked / total) * 100);
-
-  const handleVideoEnd = () => setVideoDone(true);
-
-  const handleQuizChange = (idx, opt) => {
-    setQuizAnswers(prev => ({ ...prev, [idx]: opt }));
   };
 
-  const submitQuiz = () => {
-    const idx = course.chapters.findIndex(c => c._id === activeChapter._id);
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    axios.post(`http://localhost:5000/api/courses/${courseId}/submit-quiz/${idx}`, {
-      userId: user._id,
-      answers: quizAnswers
-    })
-    .then(({ data }) => {
-      if (data.passed) {
-        axios.post(`http://localhost:5000/api/enrollments/unlock/${user._id}/${courseId}`)
-          .then(res => setUnlocked(res.data.chaptersUnlocked))
-          .catch(err => console.error('Unlock error:', err));
-        alert("Quiz passed! Next chapter unlocked.");
-      } else {
-        alert(`Score: ${data.score}/${data.total}. Need ≥70% to pass.`);
-      }
-    })
-    .catch(err => {
-      console.error('Submit quiz error:', err);
-      alert("Error submitting quiz");
-    });
+  const handleCompleteChapter = async (idx) => {
+    try {
+      await axios.post(`http://localhost:5000/api/enrollments/unlockChapter`, {
+        userId: user._id,
+        courseId,
+        chapterIndex: idx,
+      });
+      setCurrentChapter(idx + 1);
+      setVideoWatched(false);
+      setPdfViewed(false);
+      setAnswers([]);
+      setQuizResult(null);
+    } catch {
+      alert("❌ Failed to unlock next chapter");
+    }
   };
+
+  if (!course || !enrollment) return <div>Loading...</div>;
 
   return (
-    <div className="cd-container">
-      <aside className="cd-sidebar">
-        <h5>Chapters</h5>
-        <div className="cd-progress-bar">
-          <div className="cd-progress-filled" style={{ width: `${percent}%` }} />
-        </div>
-        <ul>
-          {course.chapters.map((ch, i) => {
-            const isOpen = i < unlocked;
-            const isActive = activeChapter._id === ch._id;
-            return (
-              <li key={ch._id}
-                  className={`${isActive ? "active" : ""} ${isOpen ? "" : "locked"}`}
-                  onClick={() => isOpen && setActiveChapter(ch)}>
-                {ch.title}
-              </li>
-            );
-          })}
-        </ul>
-      </aside>
+    <div className="container py-4">
+      <h3 className="mb-4 fw-bold">{course.title}</h3>
 
-      <main className="cd-content">
-        <div className="cd-card">
-          <h3>{activeChapter.title}</h3>
+      {course.chapters.map((chapter, idx) => {
+        const isUnlocked = idx < enrollment.chaptersUnlocked;
+        const isCurrent = idx === currentChapter;
 
-          {activeChapter.videoUrl && (
-            <video
-              ref={videoRef}
-              src={activeChapter.videoUrl}
-              controls
-              onEnded={handleVideoEnd}
-              className="cd-video"
-            />
-          )}
+        return (
+          <div key={idx} className="p-3 mb-4 border rounded bg-light">
+            <h5>Chapter {idx + 1}: {chapter.title}</h5>
 
-          {videoDone && activeChapter.pdfUrl && (
-            <a href={activeChapter.pdfUrl} target="_blank" rel="noopener noreferrer" className="cd-btn cd-btn-pdf">
-              Download PDF
-            </a>
-          )}
+            {isUnlocked ? (
+              <>
+                <p>{chapter.content}</p>
 
-          <div className="cd-section">
-            <h5>Quiz</h5>
-            {activeChapter.quiz.map((q, idx) => (
-              <div key={idx} className="cd-quiz-question">
-                <p>{q.question}</p>
-                {q.options.map(opt => (
-                  <label key={opt}>
-                    <input
-                      type="radio"
-                      name={`quiz${idx}`}
-                      onChange={() => handleQuizChange(idx, opt)}
-                      disabled={!videoDone}
-                    /> {opt}
-                  </label>
-                ))}
-              </div>
-            ))}
-            <button onClick={submitQuiz} disabled={!videoDone} className="cd-btn cd-btn-quiz">
-              Submit Quiz
-            </button>
+                {chapter.videoUrl && (
+                  <video
+                    width="600"
+                    controls
+                    onEnded={() => setVideoWatched(true)}
+                  >
+                    <source
+                      src={`http://localhost:5000${chapter.videoUrl}`}
+                      type="video/mp4"
+                    />
+                    Your browser does not support the video tag.
+                  </video>
+                )}
+
+                {chapter.pdfUrl && (
+                  <div className="mt-2">
+                    <a
+                      href={`http://localhost:5000${chapter.pdfUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setPdfViewed(true)}
+                    >
+                      📄 View PDF
+                    </a>
+                  </div>
+                )}
+
+                {/* ✅ Assignment Display */}
+                {typeof chapter.assignmentQuestion === "string" && chapter.assignmentQuestion.trim() !== "" && (
+                  <div className="mt-3">
+                    <h6>📝 Assignment</h6>
+                    <p><strong>Question:</strong> {chapter.assignmentQuestion}</p>
+                  </div>
+                )}
+
+                {/* ✅ Quiz Display */}
+                {chapter.quiz && chapter.quiz.length > 0 && (
+                  <div className="mt-4">
+                    <h6>📝 Quiz</h6>
+                    {chapter.quiz.map((q, qIdx) => (
+                      <div key={qIdx} className="mb-3">
+                        <strong>{q.question}</strong>
+                        {q.options.map((opt, oIdx) => (
+                          <div key={oIdx} className="form-check">
+                            <input
+                              type="radio"
+                              name={`q${qIdx}`}
+                              id={`q${qIdx}_opt${oIdx}`}
+                              className="form-check-input"
+                              checked={answers[qIdx] === opt}
+                              onChange={() => handleAnswerChange(qIdx, opt)}
+                            />
+                            <label htmlFor={`q${qIdx}_opt${oIdx}`} className="form-check-label">
+                              {opt}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                    <button
+                      className="btn btn-outline-success mt-2"
+                      onClick={() => handleSubmitQuiz(idx)}
+                      disabled={answers.length !== chapter.quiz.length}
+                    >
+                      Submit Quiz
+                    </button>
+                    {quizResult && (
+                      <div className="alert mt-3" style={{ background: quizResult.passed ? "#d4edda" : "#f8d7da" }}>
+                        <p><strong>Score:</strong> {quizResult.score} / {quizResult.total}</p>
+                        <p><strong>Percent:</strong> {quizResult.percent}% {quizResult.passed ? "(Passed)" : "(Failed)"}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ✅ Mark Chapter as Complete */}
+                {isCurrent && (
+                  <button
+                    className="btn btn-primary mt-3"
+                    disabled={
+                      (chapter.videoUrl && !videoWatched) ||
+                      (chapter.pdfUrl && !pdfViewed) ||
+                      (chapter.quiz && chapter.quiz.length > 0 && !quizResult?.passed)
+                    }
+                    onClick={() => handleCompleteChapter(idx)}
+                  >
+                    ✅ Mark as Complete
+                  </button>
+                )}
+              </>
+            ) : (
+              <span>🔒 Locked. Complete previous chapters to unlock.</span>
+            )}
           </div>
-        </div>
-      </main>
+        );
+      })}
     </div>
   );
 }
+
+export default CourseDetails;
