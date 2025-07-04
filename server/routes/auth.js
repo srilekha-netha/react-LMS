@@ -2,8 +2,12 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+<<<<<<< HEAD
 const sendOTP = require("../utils/sendEmail");
 
+=======
+const Log = require("../models/Log"); // ✅ Add Log model
+>>>>>>> fbd6d69c8e25ddd0059941aef24936dec5f7e1fa
 const router = express.Router();
 
 // 🔹 Send OTP
@@ -96,7 +100,20 @@ router.post("/register", async (req, res) => {
     const user = new User({ name, email, password: hashed, role, isVerified: true });
     await user.save();
 
+<<<<<<< HEAD
     res.status(201).json({ message: "User registered directly (without OTP flow)" });
+=======
+    // ✅ Log registration
+    await Log.create({
+      action: `Registered as ${role}`,
+      user: email,
+      role: role,
+      ip: req.ip,
+      timestamp: new Date(),
+    });
+
+    res.status(201).json({ message: "User registered" });
+>>>>>>> fbd6d69c8e25ddd0059941aef24936dec5f7e1fa
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -113,6 +130,7 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
+<<<<<<< HEAD
     // ✅ You can restrict unverified users here (optional)
     // if (!user.isVerified) return res.status(403).json({ message: "Please verify your email first" });
 
@@ -121,6 +139,19 @@ router.post("/login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
+=======
+    // JWT Token
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+    // ✅ Log successful login
+    await Log.create({
+      action: `Logged in`,
+      user: user.email,
+      role: user.role,
+      ip: req.ip,
+      timestamp: new Date(),
+    });
+>>>>>>> fbd6d69c8e25ddd0059941aef24936dec5f7e1fa
 
     res.status(200).json({
       message: "Login successful",

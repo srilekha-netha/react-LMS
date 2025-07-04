@@ -254,4 +254,8 @@ const styles = {
   },
 };
 
+<<<<<<< HEAD
 export default Register;
+=======
+export default Register;
+>>>>>>> fbd6d69c8e25ddd0059941aef24936dec5f7e1fa

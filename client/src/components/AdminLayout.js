@@ -1,62 +1,62 @@
-// src/components/AdminLayout.js
 import React from "react";
-import { Outlet, Link } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
+import { Outlet, Link, useLocation } from "react-router-dom";
+import "./StudentDashboard.css";
 
-export default function AdminLayout() {
+function AdminLayout() {
+  const location = useLocation();
+
+  const navItems = [
+    { to: "/admin", icon: "speedometer2", label: "Dashboard" },
+    { to: "/admin/users", icon: "people-fill", label: "User Management" },
+    { to: "/admin/courses", icon: "journal-bookmark-fill", label: "Course Management" },
+     { to: "/admin/teachers/onboarding", icon: "person-badge", label: "Teacher Onboarding" },
+    { to: "/admin/payments", icon: "wallet", label: "Payments" },
+    { to: "/admin/reports", icon: "graph-up", label: "Reports" },
+    { to: "/admin/coupons", icon: "ticket-perforated", label: "Coupons" },
+    { to: "/admin/settings", icon: "gear", label: "Settings" },
+    { to: "/admin/logs", icon: "shield-lock", label: "Logs" },
+    { to: "/admin/profile", icon: "person-circle", label: "Profile" },
+  ];
+
   return (
-    <div className="vh-100 vw-100 d-flex flex-column overflow-hidden">
-      {/* Top Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-sm">
-        <span className="navbar-brand d-flex align-items-center gap-2">
-          <i className="bi bi-speedometer2 fs-4"></i>
-          <span className="fs-5">Admin Panel</span>
-        </span>
-        <div className="ms-auto d-flex align-items-center gap-3">
-          <Link to="/admin/settings" className="text-white" title="Settings">
-            <i className="bi bi-gear-fill fs-5"></i>
-          </Link>
-          <Link to="/" className="btn btn-outline-light btn-sm">
-            Logout
+    <div className="teacher-dashboard-wrapper">
+      <nav className="teacher-navbar">
+        <span className="fw-bold logo-title">🛠️ Admin Panel</span>
+        <div className="d-flex align-items-center gap-4">
+          <Link to="/admin/logout" className="btn btn-outline-light btn-sm teacher-logout-btn">
+            <i className="bi bi-box-arrow-right me-1"></i> Logout
           </Link>
         </div>
       </nav>
 
-      {/* Body Layout */}
-      <div className="d-flex flex-grow-1 h-100 overflow-hidden">
-        {/* Sidebar */}
-        <aside
-          className="bg-dark text-white p-3 d-flex flex-column"
-          style={{ width: "250px", overflowY: "auto" }}
-        >
-          <nav className="nav flex-column">
-            <Link to="/admin" className="nav-link text-white mb-2">
-              <i className="bi bi-house-door-fill me-2"></i> Dashboard
-            </Link>
-            <Link to="/admin/users" className="nav-link text-white mb-2">
-              <i className="bi bi-people-fill me-2"></i> User Management
-            </Link>
-            <Link to="/admin/courses" className="nav-link text-white mb-2">
-              <i className="bi bi-journal-bookmark-fill me-2"></i> Course Management
-            </Link>
-            <Link to="/admin/payments" className="nav-link text-white mb-2">
-              <i className="bi bi-currency-dollar me-2"></i> Payment Management
-            </Link>
-            <Link to="/admin/reports" className="nav-link text-white mb-2">
-              <i className="bi bi-graph-up me-2"></i> Reports & Analytics
-            </Link>
-            <Link to="/admin/coupons" className="nav-link text-white mb-2">
-              <i className="bi bi-ticket-perforated-fill me-2"></i> Coupons
-            </Link>
-          </nav>
+      <div className="teacher-main-content">
+        <aside className="teacher-sidebar">
+          <h5 className="sidebar-title">
+            <i className="bi bi-tools me-2"></i> Admin Menu
+          </h5>
+          <ul className="sidebar-nav">
+            {navItems.map((item) => (
+              <li
+                className={`sidebar-nav-item ${location.pathname.startsWith(item.to) ? "active" : ""}`}
+                key={item.to}
+              >
+                <Link to={item.to} className="sidebar-link">
+                  <span className="sidebar-icon">
+                    <i className={`bi bi-${item.icon}`}></i>
+                  </span>
+                  <span className="sidebar-label">{item.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-grow-1 bg-light p-4 overflow-auto">
+        <main className="teacher-page-content">
           <Outlet />
         </main>
       </div>
     </div>
   );
 }
+
+export default AdminLayout;

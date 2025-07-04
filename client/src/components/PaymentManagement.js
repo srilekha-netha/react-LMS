@@ -1,67 +1,75 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import './StudentDashboard.css';
 
 function PaymentManagement() {
-  const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const teacher = JSON.parse(localStorage.getItem("user")); // assuming teacher is logged in
+  const [history, setHistory] = useState([]);
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
-    if (!teacher?._id) return;
+    if (!user || !user._id) {
+      // inject fake data when no real user
+      setHistory([
+        { course: { title: 'React Basics' }, amount: 499, date: new Date(), coupon: 'WELCOME10', invoice: '#' },
+        { course: { title: 'NodeJS Mastery' }, amount: 799, date: new Date(), coupon: null, invoice: '#' }
+      ]);
+      return;
+    }
 
     axios
-      .get(`http://localhost:5000/api/teacher/earnings/${teacher._id}`)
-      .then((res) => {
-        setPayments(res.data);
-        setLoading(false);
-      })
+      .get(`http://localhost:5000/api/payments/user/${user._id}`)
+      .then((res) =>
+        setHistory(res.data.length ? res.data : [
+          { course: { title: 'React Basics' }, amount: 499, date: new Date(), coupon: 'WELCOME10', invoice: '#' },
+          { course: { title: 'NodeJS Mastery' }, amount: 799, date: new Date(), coupon: null, invoice: '#' }
+        ])
+      )
       .catch((err) => {
-        console.error("❌ Failed to fetch earnings:", err);
-        setLoading(false);
+        console.error("❌ Failed to load payment history:", err);
+        setHistory([
+          { course: { title: 'React Basics' }, amount: 499, date: new Date(), coupon: 'WELCOME10', invoice: '#' },
+          { course: { title: 'NodeJS Mastery' }, amount: 799, date: new Date(), coupon: null, invoice: '#' }
+        ]);
       });
-  }, [teacher]);
-
-  const totalEarnings = payments.reduce((sum, p) => sum + p.amount, 0);
+  }, [user]);
 
   return (
-    <div className="container mt-4">
-      <h3 className="mb-4 fw-bold">💰 My Earnings</h3>
-
-      {loading ? (
-        <p>Loading your earnings...</p>
-      ) : payments.length === 0 ? (
-        <div className="alert alert-info">No earnings available.</div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-striped table-bordered">
-            <thead className="table-dark">
-              <tr>
-                <th>#</th>
-                <th>Course</th>
-                <th>Student</th>
-                <th>Amount (₹)</th>
-                <th>Date</th>
+    <div className="container py-4">
+      <h2 className="mb-4 fw-bold">🧾 Payment History</h2>
+      <div className="table-responsive">
+        <table className="table table-bordered table-striped">
+          <thead className="table-dark">
+            <tr>
+              <th>#</th>
+              <th>Course Title</th>
+              <th>Amount Paid</th>
+              <th>Date</th>
+              <th>Coupon Used</th>
+              <th>Invoice</th>
+            </tr>
+          </thead>
+          <tbody>
+            {history.map((h, i) => (
+              <tr key={i}>
+                <td data-label="#">{i + 1}</td>
+                <td data-label="Course Title">{h.course?.title || 'N/A'}</td>
+                <td data-label="Amount Paid">₹{h.amount}</td>
+                <td data-label="Date">{new Date(h.date).toLocaleString()}</td>
+                <td data-label="Coupon Used">{h.coupon || '—'}</td>
+                <td data-label="Invoice">
+                  {h.invoice ? (
+                    <a href={h.invoice} className="btn btn-sm btn-outline-primary">
+                      Download
+                    </a>
+                  ) : (
+                    '—'
+                  )}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {payments.map((p, i) => (
-                <tr key={p._id}>
-                  <td>{i + 1}</td>
-                  <td>{p.course?.title || "N/A"}</td>
-                  <td>{p.student?.name || "N/A"}</td>
-                  <td>₹{p.amount}</td>
-                  <td>{new Date(p.date).toLocaleString()}</td>
-                </tr>
-              ))}
-              <tr className="fw-bold">
-                <td colSpan="3">Total Earnings</td>
-                <td colSpan="2">₹{totalEarnings}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

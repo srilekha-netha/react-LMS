@@ -1,85 +1,72 @@
+// src/components/RazorpayPayment.js
 import React, { useEffect } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 
-function RazorpayPayment() {
+export default function RazorpayPayment() {
   const location = useLocation();
   const navigate = useNavigate();
-  const queryParams = new URLSearchParams(location.search);
-  const courseId = queryParams.get("courseId");
-  const amount = queryParams.get("amount");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user     = JSON.parse(localStorage.getItem("user") || "{}");
+  const qp       = new URLSearchParams(location.search);
+  const courseId = qp.get("courseId");
+  const amount   = qp.get("amount");
 
   useEffect(() => {
-    if (!user?._id || !courseId || !amount) {
+    if (!user._id || !courseId || !amount) {
       alert("Missing payment data");
       return navigate("/student/explore");
     }
 
-    const loadRazorpayScript = () => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      document.body.appendChild(script);
+    const loadRz = () => {
+      const s = document.createElement("script");
+      s.src = "https://checkout.razorpay.com/v1/checkout.js";
+      document.body.appendChild(s);
     };
 
     const startPayment = async () => {
       try {
-        const { data } = await axios.post("http://localhost:5000/api/payments/create", {
-          amount,
-          userId: user._id,
-          courseId,
-        });
+        // 1. create order
+        const { data: order } = await axios.post(
+          "http://localhost:5000/api/payments/create-order",
+          { amount }
+        );
 
+        // 2. open checkout
         const options = {
-          key: "rzp_test_dGFALpaB5MZyZr", // 🔑 Your Razorpay key
-          amount: data.amount,
-          currency: "INR",
-          name: "LMS Payment",
+          key:         "rzp_test_dGFALpaB5MZyZr",
+          amount:      order.amount,
+          currency:    order.currency,
+          order_id:    order.id,
+          name:        "LMS Payment",
           description: "Course Enrollment",
-          order_id: data.orderId,
-          handler: async function (response) {
-            try {
-              await axios.post("http://localhost:5000/api/payments/verify", {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                userId: user._id,
-                courseId,
-                amount,
-              });
-
-              alert("✅ Payment successful!");
-              navigate("/student/my-courses");
-            } catch (err) {
-              console.error("❌ Payment verification failed", err);
-              alert("Payment verification failed");
-              navigate("/student/explore");
-            }
+          handler: async (resp) => {
+            // 3. verify & save
+            await axios.post("http://localhost:5000/api/payments/verify", {
+              razorpay_order_id:   resp.razorpay_order_id,
+              razorpay_payment_id: resp.razorpay_payment_id,
+              razorpay_signature:  resp.razorpay_signature,
+              userId:              user._id,    // ← match backend
+              courseId,
+              amount,
+            });
+            alert("✅ Payment successful!");
+            navigate("/student/my-courses");
           },
-          prefill: {
-            name: user.name,
-            email: user.email,
-          },
-          theme: {
-            color: "#0d6efd",
-          },
+          prefill: { name: user.name, email: user.email },
+          theme:   { color: "#0d6efd" },
         };
 
-        const rzp = new window.Razorpay(options);
-        rzp.open();
+        new window.Razorpay(options).open();
       } catch (err) {
-        console.error("❌ Payment initiation failed:", err);
+        console.error("❌ Payment init failed:", err);
         alert("Payment failed");
         navigate("/student/explore");
       }
     };
 
-    loadRazorpayScript();
-    setTimeout(startPayment, 500);
+    loadRz();
+    startPayment();
   }, [user, courseId, amount, navigate]);
 
   return <h3 className="text-center mt-5">Processing Payment...</h3>;
 }
-
-export default RazorpayPayment;

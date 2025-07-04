@@ -7,33 +7,37 @@ function Messages() {
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
     if (!user || !user._id) return;
 
-    // ✅ Load users excluding self
-   axios.get("http://localhost:5000/api/users")
-  .then((res) => {
-    if (!user || !user._id) return;
-    const filtered = res.data.filter(u => u._id !== user._id && u.role === "student");
-    setUsers(filtered);
-  })
-  .catch(err => {
-    console.error("Failed to fetch users", err);
-  });
+    // ✅ Load enrolled students (from teacher's courses)
+    axios
+      .get(`http://localhost:5000/api/enrollments/byTeacher/${user._id}`)
+      .then((res) => {
+        const unique = {};
+        res.data.forEach((enr) => {
+          if (enr.student && !unique[enr.student._id]) {
+            unique[enr.student._id] = enr.student;
+          }
+        });
+        setUsers(Object.values(unique));
+      })
+      .catch((err) => {
+        console.error("❌ Failed to fetch enrolled students", err);
+      });
 
-
-
-    // ✅ Load inbox
-    axios.get(`http://localhost:5000/api/messages/inbox/${user._id}`)
-      .then(res => setMessages(res.data.reverse()))
-      .catch(err => console.error("❌ Failed to load messages", err));
+    // ✅ Load inbox messages
+    axios
+      .get(`http://localhost:5000/api/messages/inbox/${user._id}`)
+      .then((res) => setMessages(res.data.reverse()))
+      .catch((err) => console.error("❌ Failed to load messages", err));
   }, [user]);
 
   const handleSend = async () => {
     if (!to || !content.trim()) {
-      alert("Please select user and enter message.");
+      alert("Please select a student and enter a message.");
       return;
     }
 
@@ -41,18 +45,30 @@ function Messages() {
       await axios.post("http://localhost:5000/api/messages/send", {
         from: user._id,
         to,
-        content
+        content,
       });
 
       alert("✅ Message sent!");
       setContent("");
 
-      // Refresh messages
+      // Refresh inbox
       const updated = await axios.get(`http://localhost:5000/api/messages/inbox/${user._id}`);
       setMessages(updated.data.reverse());
     } catch (err) {
       alert("❌ Failed to send message");
       console.error("Axios POST error:", err);
+    }
+  };
+
+  const handleDelete = async (messageId) => {
+    if (!window.confirm("Are you sure you want to delete this message?")) return;
+
+    try {
+      await axios.delete(`http://localhost:5000/api/messages/${messageId}`);
+      setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+    } catch (err) {
+      alert("❌ Failed to delete message");
+      console.error("Delete error:", err);
     }
   };
 
@@ -62,11 +78,15 @@ function Messages() {
 
       <div className="mb-3">
         <label>Send To:</label>
-        <select className="form-select" value={to} onChange={(e) => setTo(e.target.value)}>
-          <option value="">-- Select User --</option>
-          {users.map(u => (
+        <select
+          className="form-select"
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+        >
+          <option value="">-- Select Student --</option>
+          {users.map((u) => (
             <option key={u._id} value={u._id}>
-              {u.name} ({u.role})
+              {u.name} ({u.email})
             </option>
           ))}
         </select>
@@ -94,8 +114,19 @@ function Messages() {
           <li className="list-group-item text-muted">No messages received.</li>
         ) : (
           messages.map((msg, i) => (
-            <li key={i} className="list-group-item">
-              <strong>{msg.from?.name || "Unknown"}:</strong> {msg.content}
+            <li
+              key={i}
+              className="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <div>
+                <strong>{msg.from?.name || "Unknown"}:</strong> {msg.content}
+              </div>
+              <button
+                className="btn btn-sm btn-danger"
+                onClick={() => handleDelete(msg._id)}
+              >
+                Delete
+              </button>
             </li>
           ))
         )}

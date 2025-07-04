@@ -50,10 +50,26 @@ function StudentAssignments() {
     formData.append("file", file);
     formData.append("student", user._id);
     formData.append("course", selectedCourseId);
-    formData.append("chapter", selectedChapterIndex); // ✅ Use selected chapter index
+    formData.append("chapter", selectedChapterIndex);
 
     try {
+      // ✅ Submit the assignment
       await axios.post("http://localhost:5000/api/assignments/submit", formData);
+
+      // ✅ Fetch course details to get teacher ID
+      const courseRes = await axios.get(`http://localhost:5000/api/courses/${selectedCourseId}`);
+      const course = courseRes.data;
+      const teacherId = course?.instructor?._id;
+
+      // ✅ Send notification to teacher
+      if (teacherId) {
+        await axios.post("http://localhost:5000/api/notifications/send", {
+          user: teacherId,
+          text: `📤 ${user.name} submitted an assignment for "${course.title}"`,
+          icon: "bi bi-file-earmark-arrow-up"
+        });
+      }
+
       setMsg("✅ Assignment submitted!");
       setFile(null);
       setSelectedCourseId("");
@@ -71,6 +87,7 @@ function StudentAssignments() {
 
       <div className="card p-3 mb-4">
         <h4>Upload Assignment (PDF)</h4>
+
         <div className="mb-3">
           <label>Select Course:</label>
           <select
@@ -153,7 +170,11 @@ function StudentAssignments() {
                   <td>{a.grade || "N/A"}</td>
                   <td>
                     {a.fileUrl ? (
-                      <a href={`http://localhost:5000${a.fileUrl}`} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={`http://localhost:5000${a.fileUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         View
                       </a>
                     ) : (

@@ -30,12 +30,12 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// TEST Route
+// ✅ Test Route
 router.get('/test', (req, res) => {
   res.send('Course route is working!');
 });
 
-// Create Course
+// ✅ Create Course
 router.post('/create', upload.single('thumbnail'), async (req, res) => {
   try {
     const { title, description, category, difficulty, price, teacher } = req.body;
@@ -57,13 +57,58 @@ router.post('/create', upload.single('thumbnail'), async (req, res) => {
   }
 });
 
-// Get all courses by teacher
+// ✅ Get all courses by teacher
 router.get('/teacher/:teacherId', async (req, res) => {
   try {
     const courses = await Course.find({ teacher: req.params.teacherId });
     res.json(courses);
   } catch (err) {
     res.status(500).json({ message: 'Error getting courses', error: err.message });
+  }
+});
+
+// ✅ Get all courses
+router.get('/', async (req, res) => {
+  try {
+    const courses = await Course.find();
+    const result = await Promise.all(
+      courses.map(async (course) => {
+        let teacherName = "Unknown";
+        try {
+          const teacher = await User.findById(course.teacher).select("name");
+          if (teacher) teacherName = teacher.name;
+        } catch (err) {
+          console.warn(`⚠️ Could not fetch teacher for course ${course._id}:`, err.message);
+        }
+
+        return {
+          id: course._id,
+          title: course.title,
+          description: course.description || "No description",
+          price: Number(course.price),
+          difficulty: course.difficulty,
+          thumbnail: course.thumbnail,
+          teacher: course.teacher,
+          teacherName: teacherName,
+          published: course.published
+        };
+      })
+    );
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error("🔥 Error in /:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+});
+
+// ✅ Get course by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+    res.json(course);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
@@ -99,72 +144,58 @@ router.post('/:id/add-chapter', upload.fields([
   }
 });
 
-// Get course by ID
-router.get('/:id', async (req, res) => {
+// ✅ Edit Chapter by Index
+router.post('/:id/edit-chapter/:chapterIdx', upload.fields([
+  { name: 'video', maxCount: 1 },
+  { name: 'pdf', maxCount: 1 }
+]), async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id);
+    const { id, chapterIdx } = req.params;
+    const { title, content, quiz, assignmentQuestion } = req.body;
+
+    const course = await Course.findById(id);
     if (!course) return res.status(404).json({ message: "Course not found" });
-    res.json(course);
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
 
-// Get all courses without filtering by published
-router.get('/', async (req, res) => {
-  try {
-    const courses = await Course.find();
-    const result = await Promise.all(
-      courses.map(async (course) => {
-        let teacherName = "Unknown";
-        try {
-          const teacher = await User.findById(course.teacher).select("name");
-          if (teacher) teacherName = teacher.name;
-        } catch (err) {
-          console.warn(`⚠️ Could not fetch teacher for course ${course._id}:`, err.message);
-        }
+    const chapter = course.chapters[chapterIdx];
+    if (!chapter) return res.status(404).json({ message: "Chapter not found" });
 
-        return {
-          id: course._id,
-          title: course.title,
-          description: course.description || "No description",
-          price: Number(course.price),
-          difficulty: course.difficulty,
-          thumbnail: course.thumbnail,
-          teacher: course.teacher,
-          teacherName: teacherName,
-          published: course.published
-        };
-      })
-    );
-    return res.status(200).json(result);
-  } catch (err) {
-    console.error("🔥 Error in /:", err);
-    res.status(500).json({ message: "Internal Server Error", error: err.message });
-  }
-});
+    // Update basic fields
+    chapter.title = title;
+    chapter.content = content;
+    chapter.assignmentQuestion = assignmentQuestion || "";
+    chapter.quiz = quiz ? JSON.parse(quiz) : [];
 
-// Update Course
-router.put('/:id', upload.single('thumbnail'), async (req, res) => {
-  try {
-    const updateData = { ...req.body };
-    if (req.file) updateData.thumbnail = req.file.filename;
-    if (typeof updateData.published !== "undefined") {
-      updateData.published = updateData.published === 'true' || updateData.published === true;
+    // Update files if provided
+    if (req.files['video']) {
+      chapter.videoUrl = '/uploads/chapter_files/' + req.files['video'][0].filename;
     }
-    delete updateData.chapters;
-    delete updateData.teacher;
+    if (req.files['pdf']) {
+      chapter.pdfUrl = '/uploads/chapter_files/' + req.files['pdf'][0].filename;
+    }
 
-    const updated = await Course.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    if (!updated) return res.status(404).json({ message: 'Course not found' });
-
-    res.json(updated);
+    await course.save();
+    res.status(200).json({ message: "Chapter updated", chapters: course.chapters });
   } catch (err) {
-    res.status(500).json({ message: 'Error updating course', error: err.message });
+    res.status(500).json({ message: "Error editing chapter", error: err.message });
   }
 });
 
-// Submit Quiz
+// ✅ Delete Chapter by Index
+router.delete('/:id/chapter/:chapterIdx', async (req, res) => {
+  try {
+    const { id, chapterIdx } = req.params;
+    const course = await Course.findById(id);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    course.chapters.splice(chapterIdx, 1);
+    await course.save();
+    res.status(200).json({ message: "Chapter deleted", chapters: course.chapters });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting chapter", error: err.message });
+  }
+});
+
+// ✅ Submit Quiz
 router.post('/:id/submit-quiz/:chapterIdx', async (req, res) => {
   try {
     const { userId, answers } = req.body;
@@ -185,7 +216,27 @@ router.post('/:id/submit-quiz/:chapterIdx', async (req, res) => {
   }
 });
 
-// Delete Course
+// ✅ Update Course (excluding chapters)
+router.put('/:id', upload.single('thumbnail'), async (req, res) => {
+  try {
+    const updateData = { ...req.body };
+    if (req.file) updateData.thumbnail = req.file.filename;
+    if (typeof updateData.published !== "undefined") {
+      updateData.published = updateData.published === 'true' || updateData.published === true;
+    }
+    delete updateData.chapters;
+    delete updateData.teacher;
+
+    const updated = await Course.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    if (!updated) return res.status(404).json({ message: 'Course not found' });
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating course', error: err.message });
+  }
+});
+
+// ✅ Delete Course
 router.delete('/:id', async (req, res) => {
   try {
     const deleted = await Course.findByIdAndDelete(req.params.id);

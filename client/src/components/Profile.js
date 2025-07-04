@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 function Profile() {
   const [profile, setProfile] = useState({
@@ -6,31 +7,73 @@ function Profile() {
     email: "",
     bio: "",
     expertise: "",
-    password: "",
   });
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  useEffect(() => {
     if (user && user.name && user.email) {
       setProfile({
         name: user.name || "",
         email: user.email || "",
         bio: user.bio || "",
         expertise: user.expertise || "",
-        password: "",
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
-  const handleUpdate = (e) => {
+  const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    // Optional: Save to API or localStorage (demo purpose)
-    alert("Profile updated successfully!");
+    setMessage("");
+    setError("");
+
+    try {
+      await axios.put(`http://localhost:5000/api/users/${user._id}`, {
+        name: profile.name,
+        bio: profile.bio,
+        expertise: profile.expertise,
+      });
+
+      setMessage("✅ Profile updated successfully!");
+    } catch (err) {
+      setError("❌ Failed to update profile.");
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setError("");
+
+    if (newPassword !== confirmPassword) {
+      return setError("❌ New password and confirm password do not match.");
+    }
+
+    try {
+      await axios.post(`http://localhost:5000/api/users/${user._id}/change-password`, {
+        oldPassword: currentPassword,
+        newPassword,
+      });
+
+      setMessage("🔐 Password changed successfully.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      setError("❌ Password change failed.");
+    }
   };
 
   return (
@@ -42,38 +85,36 @@ function Profile() {
           </h4>
         </div>
         <div className="card-body">
-          <form onSubmit={handleUpdate}>
+          {message && <div className="alert alert-success">{message}</div>}
+          {error && <div className="alert alert-danger">{error}</div>}
+
+          {/* Profile Update Form */}
+          <form onSubmit={handleUpdateProfile}>
             <div className="mb-3">
-              <label htmlFor="name" className="form-label">Name</label>
+              <label className="form-label">Name</label>
               <input
-                id="name"
-                name="name"
                 type="text"
+                name="name"
                 className="form-control"
                 value={profile.name}
                 onChange={handleChange}
-                required
               />
             </div>
 
             <div className="mb-3">
-              <label htmlFor="email" className="form-label">Email</label>
+              <label className="form-label">Email</label>
               <input
-                id="email"
-                name="email"
                 type="email"
+                name="email"
                 className="form-control"
                 value={profile.email}
-                onChange={handleChange}
-                required
-                readOnly // Disable email change if you want
+                readOnly
               />
             </div>
 
             <div className="mb-3">
-              <label htmlFor="bio" className="form-label">Bio</label>
+              <label className="form-label">Bio</label>
               <textarea
-                id="bio"
                 name="bio"
                 className="form-control"
                 rows="3"
@@ -83,25 +124,12 @@ function Profile() {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="expertise" className="form-label">Expertise</label>
+              <label className="form-label">Expertise</label>
               <input
-                id="expertise"
-                name="expertise"
                 type="text"
+                name="expertise"
                 className="form-control"
                 value={profile.expertise}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="password" className="form-label">Change Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                className="form-control"
-                value={profile.password}
                 onChange={handleChange}
               />
             </div>
@@ -109,6 +137,51 @@ function Profile() {
             <div className="text-end">
               <button type="submit" className="btn btn-success">
                 <i className="bi bi-save me-1"></i> Update Profile
+              </button>
+            </div>
+          </form>
+
+          <hr className="my-4" />
+
+          {/* Change Password Form */}
+          <h6 className="mb-3">🔒 Change Password</h6>
+          <form onSubmit={handlePasswordChange}>
+            <div className="mb-3">
+              <label className="form-label">Current Password</label>
+              <input
+                type="password"
+                className="form-control"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">New Password</label>
+              <input
+                type="password"
+                className="form-control"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Confirm New Password</label>
+              <input
+                type="password"
+                className="form-control"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="text-end">
+              <button type="submit" className="btn btn-warning">
+                <i className="bi bi-lock me-1"></i> Change Password
               </button>
             </div>
           </form>

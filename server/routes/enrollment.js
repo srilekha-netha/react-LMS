@@ -3,9 +3,9 @@ const Enrollment = require("../models/Enrollment");
 const Course = require("../models/Course");
 const router = express.Router();
 
-// ✅ Enroll in a course (called after payment success)
+// Enroll in a course
 router.post("/enroll", async (req, res) => {
-  const { userId, courseId, amountPaid } = req.body;
+  const { userId, courseId } = req.body;
 
   try {
     const exists = await Enrollment.findOne({ student: userId, course: courseId });
@@ -27,7 +27,7 @@ router.post("/enroll", async (req, res) => {
   }
 });
 
-// ✅ Get all enrollments for a student
+// Get all enrollments for a student
 router.get("/byUser/:userId", async (req, res) => {
   try {
     const data = await Enrollment.find({ student: req.params.userId }).populate("course");
@@ -38,7 +38,7 @@ router.get("/byUser/:userId", async (req, res) => {
   }
 });
 
-// ✅ Get specific enrollment
+// Get specific enrollment
 router.get("/byUserAndCourse/:userId/:courseId", async (req, res) => {
   try {
     const data = await Enrollment.findOne({
@@ -52,7 +52,7 @@ router.get("/byUserAndCourse/:userId/:courseId", async (req, res) => {
   }
 });
 
-// ✅ Unlock next chapter if eligible
+// ✅ Unlock next chapter — fixed edge case for last chapter
 router.post("/unlockChapter", async (req, res) => {
   const { userId, courseId, chapterIndex } = req.body;
 
@@ -63,14 +63,23 @@ router.post("/unlockChapter", async (req, res) => {
     const course = await Course.findById(courseId);
     const totalChapters = course.chapters.length;
 
+    // Don't unlock beyond the last chapter
+    if (chapterIndex >= totalChapters - 1) {
+      enrollment.progress = 100;
+      enrollment.completed = true;
+      await enrollment.save();
+      return res.json({ message: "Final chapter completed", enrollment });
+    }
+
+    // Unlock next chapter if current is just completed
     if (enrollment.chaptersUnlocked === chapterIndex + 1) {
       enrollment.chaptersUnlocked += 1;
       enrollment.progress = Math.round((enrollment.chaptersUnlocked / totalChapters) * 100);
+      enrollment.completed = enrollment.progress === 100;
       await enrollment.save();
-
-      res.json({ message: "Chapter unlocked", chaptersUnlocked: enrollment.chaptersUnlocked });
+      return res.json({ message: "Chapter unlocked", chaptersUnlocked: enrollment.chaptersUnlocked });
     } else {
-      res.status(400).json({ message: "Complete previous chapters first" });
+      return res.status(400).json({ message: "Complete previous chapters first" });
     }
   } catch (err) {
     console.error("❌ Chapter unlock error:", err.message);
@@ -78,26 +87,25 @@ router.post("/unlockChapter", async (req, res) => {
   }
 });
 
-// ✅ Get published courses user is NOT enrolled in
+// Get published courses user is NOT enrolled in
 router.get("/notEnrolled/:userId", async (req, res) => {
   try {
-    const userId = req.params.userId;
     const allCourses = await Course.find({ published: true });
-    const enrollments = await Enrollment.find({ student: userId }).select("course");
+    const enrollments = await Enrollment.find({ student: req.params.userId }).select("course");
 
     const enrolledCourseIds = enrollments.map(e => e.course.toString());
-    const notEnrolledCourses = allCourses.filter(
-      course => !enrolledCourseIds.includes(course._id.toString())
+    const notEnrolled = allCourses.filter(
+      c => !enrolledCourseIds.includes(c._id.toString())
     );
 
-    res.json(notEnrolledCourses);
+    res.json(notEnrolled);
   } catch (err) {
     console.error("❌ Error fetching non-enrolled courses:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// ✅ Get enrollments for courses by teacher
+// Get enrollments for courses by teacher
 router.get("/byTeacher/:teacherId", async (req, res) => {
   try {
     const teacherId = req.params.teacherId;
@@ -115,7 +123,7 @@ router.get("/byTeacher/:teacherId", async (req, res) => {
   }
 });
 
-// ✅ Update quiz/chapter progress (used by ProgressTracker)
+// Update quiz/chapter progress
 router.post("/progress/update", async (req, res) => {
   const { studentId, courseId, chapterId } = req.body;
 

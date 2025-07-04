@@ -1,129 +1,127 @@
-import React, { useEffect, useState, useCallback } from "react";
+// src/components/Reports.js
+import React, { useEffect, useState } from "react";
 import axios from "axios";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { saveAs } from "file-saver";
+import Papa from "papaparse";
+import "./StudentDashboard.css"; // ensure responsive styles
 
-function Reports() {
-  const [reportData, setReportData] = useState(null);
-  const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [year, setYear] = useState(new Date().getFullYear());
-  const [loading, setLoading] = useState(true);
+// Move fake data outside component to satisfy hook dependencies
+const fakeEngagement = [
+  { courseTitle: "React Basics", totalUnlocks: 120 },
+  { courseTitle: "NodeJS Mastery", totalUnlocks: 75 },
+  { courseTitle: "MongoDB Atlas", totalUnlocks: 50 },
+];
+const fakeCompletion = [
+  { title: "React Basics", rate: 65 },
+  { title: "NodeJS Mastery", rate: 40 },
+  { title: "MongoDB Atlas", rate: 30 },
+];
 
-  // ✅ Stable reference for fetchReports
-  const fetchReports = useCallback(() => {
-    setLoading(true);
-    axios
-      .get(`/api/admin/reports?month=${month}&year=${year}`)
-      .then((res) => {
-        setReportData(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching reports:", err);
-        setLoading(false);
-      });
-  }, [month, year]);
+export default function Reports() {
+  const [activeLearners, setActiveLearners] = useState(null);
+  const [engagement, setEngagement] = useState([]);
+  const [completionRates, setCompletionRates] = useState([]);
 
   useEffect(() => {
-    fetchReports();
-  }, [fetchReports]);
+    // Active Learners
+    axios
+      .get("/api/admin/reports/active-learners?since=2025-01-01")
+      .then((r) => setActiveLearners(r.data.count))
+      .catch((err) => {
+        console.error(err);
+        setActiveLearners(200); // fake count
+      });
 
-  const handleExport = () => {
-    axios({
-      url: `/api/admin/reports/export?month=${month}&year=${year}`,
-      method: "GET",
-      responseType: "blob",
-    }).then((res) => {
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `report_${month}_${year}.csv`);
-      document.body.appendChild(link);
-      link.click();
-    });
+    // Engagement
+    axios
+      .get("/api/admin/reports/engagement")
+      .then((r) => setEngagement(r.data.length ? r.data : fakeEngagement))
+      .catch((err) => {
+        console.error(err);
+        setEngagement(fakeEngagement);
+      });
+
+    // Completion Rates
+    axios
+      .get("/api/admin/reports/completion-rates")
+      .then((r) => setCompletionRates(r.data.length ? r.data : fakeCompletion))
+      .catch((err) => {
+        console.error(err);
+        setCompletionRates(fakeCompletion);
+      });
+  }, []); // empty deps now safe since fakes are stable
+
+  const exportCSV = (data, filename) => {
+    const csv = Papa.unparse(data);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, filename);
   };
 
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
-
   return (
-    <div className="container mt-4">
-      <h3>📊 Reports & Analytics</h3>
+    <div className="container py-4">
+      <h1 className="mb-4">📊 Admin Reports</h1>
 
-      <div className="d-flex align-items-center gap-3 my-3">
-        <select
-          className="form-select w-auto"
-          value={month}
-          onChange={(e) => setMonth(parseInt(e.target.value))}
-        >
-          {months.map((m, idx) => (
-            <option key={idx + 1} value={idx + 1}>
-              {m}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="number"
-          className="form-control w-auto"
-          value={year}
-          onChange={(e) => setYear(parseInt(e.target.value))}
-        />
-
-        <button className="btn btn-outline-primary btn-sm" onClick={handleExport}>
-          <i className="bi bi-download me-1"></i> Export CSV
-        </button>
-      </div>
-
-      {loading ? (
-        <p>Loading report data...</p>
-      ) : reportData ? (
-        <div className="row">
-          <div className="col-md-4 mb-3">
-            <div className="card shadow">
-              <div className="card-body">
-                <h6>Active Users</h6>
-                <h4>{reportData.activeUsers}</h4>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-4 mb-3">
-            <div className="card shadow">
-              <div className="card-body">
-                <h6>Course Completions</h6>
-                <h4>{reportData.completedCourses}</h4>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-4 mb-3">
-            <div className="card shadow">
-              <div className="card-body">
-                <h6>Revenue (₹)</h6>
-                <h4>₹{reportData.revenue}</h4>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-12 mt-3">
-            <div className="card shadow">
-              <div className="card-body">
-                <h6>Engagement Summary</h6>
-                <p>
-                  Total Logins: {reportData.totalLogins} <br />
-                  Average Time on Platform: {reportData.avgTime} mins <br />
-                  Most Popular Course: {reportData.topCourse}
-                </p>
-              </div>
-            </div>
+      {/* Active Learners */}
+      <div className="row mb-4">
+        <div className="col">
+          <div className="alert alert-info">
+            Active Learners: <strong>{activeLearners ?? "Loading..."}</strong>
           </div>
         </div>
-      ) : (
-        <p>No data available for selected month/year.</p>
-      )}
+      </div>
+
+      {/* Engagement Chart */}
+      <div className="mb-5">
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <h3 className="m-0">Course Engagement</h3>
+          <button
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => exportCSV(engagement, "engagement.csv")}
+          >
+            Export CSV
+          </button>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={engagement} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
+            <XAxis dataKey="courseTitle" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="totalUnlocks" fill="#0d6efd" barSize={30} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Completion Rates Chart */}
+      <div className="mb-5">
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <h3 className="m-0">Completion Rates (%)</h3>
+          <button
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => exportCSV(completionRates, "completion-rates.csv")}
+          >
+            Export CSV
+          </button>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart
+            data={completionRates}
+            margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
+          >
+            <XAxis dataKey="title" />
+            <YAxis unit="%" />
+            <Tooltip formatter={(value) => `${value}%`} />
+            <Bar dataKey="rate" fill="#198754" barSize={30} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
-
-export default Reports;

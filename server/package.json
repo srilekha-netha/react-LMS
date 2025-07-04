@@ -15,11 +15,18 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "file-saver": "^2.0.5",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.0",
     "multer": "^2.0.1",
+<<<<<<< HEAD
     "nodemailer": "^7.0.4",
     "razorpay": "^2.9.6"
+=======
+    "papaparse": "^5.5.3",
+    "razorpay": "^2.9.6",
+    "recharts": "^3.0.2"
+>>>>>>> fbd6d69c8e25ddd0059941aef24936dec5f7e1fa
   }
 }

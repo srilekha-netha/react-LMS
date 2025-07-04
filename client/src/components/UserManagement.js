@@ -1,117 +1,166 @@
 // src/components/UserManagement.js
-import React, { useState } from "react";
-import { Table, Tabs, Tab, Button } from "react-bootstrap";
-
-const dummyUsers = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    role: "User",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Jane Teacher",
-    email: "jane@edu.com",
-    role: "Teacher",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    name: "Admin Man",
-    email: "admin@site.com",
-    role: "Admin",
-    status: "Active",
-  },
-];
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import "./StudentDashboard.css";
 
 function UserManagement() {
-  const [key, setKey] = useState("Users");
+  const [users, setUsers] = useState([]);
+  const [filterRole, setFilterRole] = useState("all");
+  const [search, setSearch] = useState("");
 
-  const filteredUsers = dummyUsers.filter((user) => user.role === key.slice(0, -1)); // "Users" => "User"
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/admin/users");
+      setUsers(res.data);
+    } catch (err) {
+      console.error("❌ Failed to fetch users:", err);
+    }
+  };
+
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/admin/users/${userId}/role`,
+        { role: newRole }
+      );
+      await fetchUsers();
+    } catch {
+      alert("Failed to update role");
+    }
+  };
+
+  const handleBlockToggle = async (userId, isBlocked) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/admin/users/${userId}/block`,
+        { blocked: !isBlocked }
+      );
+      await fetchUsers();
+    } catch {
+      alert("Failed to update block status");
+    }
+  };
+
+  const handleDelete = async (userId) => {
+    if (!window.confirm("Delete this user?")) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/admin/users/${userId}`);
+      await fetchUsers();
+    } catch {
+      alert("Failed to delete user");
+    }
+  };
+
+  // ✅ Safe filter logic to avoid undefined .toLowerCase()
+  const filtered = users.filter((u) => {
+    const byRole = filterRole === "all" || u.role === filterRole;
+    const name = u.name || "";
+    const email = u.email || "";
+    const byText =
+      name.toLowerCase().includes(search.toLowerCase()) ||
+      email.toLowerCase().includes(search.toLowerCase());
+    return byRole && byText;
+  });
 
   return (
-    <div>
-      <h2>User Management</h2>
-      <Tabs
-        id="user-tabs"
-        activeKey={key}
-        onSelect={(k) => setKey(k)}
-        className="mb-3"
-        fill
-      >
-        <Tab eventKey="Users" title="Users"></Tab>
-        <Tab eventKey="Teachers" title="Teachers"></Tab>
-        <Tab eventKey="Admins" title="Admins"></Tab>
-      </Tabs>
+    <div className="container-fluid">
+      <h2 className="mb-4 fw-bold">👥 User Management</h2>
 
-      <Table striped bordered hover responsive>
-        <thead className="table-dark">
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th className="text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((user, index) => (
-              <tr key={user.id}>
-                <td>{index + 1}</td>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>{user.role}</td>
-                <td>{user.status}</td>
-                <td className="text-center">
-                  <Button
-                    variant="warning"
-                    size="sm"
-                    className="me-2"
-                    onClick={() => alert(`Edit user ${user.name}`)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    className="me-2"
-                    onClick={() => alert(`Delete user ${user.name}`)}
-                  >
-                    Delete
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="me-2"
-                    onClick={() => alert(`Reset password for ${user.name}`)}
-                  >
-                    Reset Password
-                  </Button>
-                  {user.role === "User" && (
-                    <Button
-                      variant="success"
-                      size="sm"
-                      onClick={() => alert(`Promote ${user.name} to Teacher`)}
+      <div className="d-flex mb-3 align-items-center">
+        <select
+          className="form-select form-select-sm me-2"
+          style={{ maxWidth: "150px" }}
+          value={filterRole}
+          onChange={(e) => setFilterRole(e.target.value)}
+        >
+          <option value="all">All</option>
+          <option value="student">Students</option>
+          <option value="teacher">Teachers</option>
+        </select>
+
+        <input
+          type="text"
+          className="form-control flex-grow-1"
+          placeholder="Search name or email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="table-responsive">
+        <table className="table dashboard-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th className="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length > 0 ? (
+              filtered.map((user) => (
+                <tr key={user._id}>
+                  <td>{user.name || "N/A"}</td>
+                  <td>{user.email || "N/A"}</td>
+                  <td>
+                    <select
+                      className="form-select form-select-sm"
+                      value={user.role}
+                      onChange={(e) =>
+                        handleRoleChange(user._id, e.target.value)
+                      }
                     >
-                      Promote
-                    </Button>
-                  )}
+                      <option value="student">Student</option>
+                      <option value="teacher">Teacher</option>
+                    </select>
+                  </td>
+                  <td>
+                    <span
+                      className={`dashboard-badge-status ${
+                        user.blocked
+                          ? "bg-danger text-white"
+                          : "bg-success text-white"
+                      }`}
+                    >
+                      {user.blocked ? "Blocked" : "Active"}
+                    </span>
+                  </td>
+                  <td className="text-end">
+                    <div className="d-flex justify-content-end gap-2">
+                      <button
+                        className="btn btn-sm btn-outline-warning dashboard-action-btn"
+                        onClick={() =>
+                          handleBlockToggle(user._id, user.blocked)
+                        }
+                      >
+                        {user.blocked ? "Unblock" : "Block"}
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-danger dashboard-action-btn"
+                        onClick={() => handleDelete(user._id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="text-center text-muted">
+                  No users found.
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="6" className="text-center text-muted">
-                No {key.toLowerCase()} found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </Table>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
