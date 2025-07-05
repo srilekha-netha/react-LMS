@@ -89,7 +89,7 @@ function StudentDashboard() {
           <div className="container">
             <div className="row">
               <div className="col-md-3 mb-4">
-                <h5 className="fw-bold text-white">LMS</h5>
+                <h5 className="fw-bold text-white">Forge LMS</h5>
                 <p>Achieve your goals with LMS Student Portal.</p>
                 <button className="btn btn-light btn-sm">Start Free Trial</button>
                 <p className="mt-2"><strong>₹999/month</strong>, cancel anytime</p>
