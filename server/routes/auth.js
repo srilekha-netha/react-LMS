@@ -3,9 +3,33 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Log = require("../models/Log");
-const sendOTP = require("../utils/sendEmail"); // ✅ make sure this file exists
+const sendOTP = require("../utils/sendEmail");
 
 const router = express.Router();
+
+// ✅ Enhanced Logging Helper
+const logAction = async (action, user, role, ip) => {
+  try {
+    if (!action || !user) {
+      console.warn("⚠️ Missing action or user for logging");
+      return;
+    }
+
+    console.log("📌 Logging Action =>", { action, user, role, ip });
+
+    const result = await Log.create({
+      action,
+      user,
+      role,
+      ip: ip || "unknown",
+      timestamp: new Date(),
+    });
+
+    console.log("✅ Log saved:", result._id);
+  } catch (err) {
+    console.error("❌ Failed to log action:", err.message);
+  }
+};
 
 // 🔹 Send OTP
 router.post("/send-otp", async (req, res) => {
@@ -14,19 +38,17 @@ router.post("/send-otp", async (req, res) => {
     if (!email) return res.status(400).json({ message: "Email is required" });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = Date.now() + 10 * 60 * 1000; // valid for 10 mins
+    const otpExpiresAt = Date.now() + 10 * 60 * 1000;
 
     let user = await User.findOne({ email });
 
-    if (!user) {
-      user = new User({ email });
-    }
+    if (!user) user = new User({ email });
 
     user.otp = otp;
     user.otpExpiresAt = otpExpiresAt;
     user.isVerified = false;
 
-    await user.save({ validateBeforeSave: false }); // 🔑 avoid name/password error
+    await user.save({ validateBeforeSave: false });
 
     await sendOTP(email, otp);
     res.status(200).json({ message: "OTP sent to email" });
@@ -49,8 +71,9 @@ router.post("/verify-otp", async (req, res) => {
     user.isVerified = true;
     user.otp = null;
     user.otpExpiresAt = null;
-
     await user.save({ validateBeforeSave: false });
+
+    await logAction("OTP verified", email, "pending", req.ip);
 
     res.status(200).json({ message: "OTP verified successfully" });
   } catch (err) {
@@ -75,16 +98,9 @@ router.post("/set-password", async (req, res) => {
     user.name = name;
     user.role = role;
     user.password = await bcrypt.hash(password, 10);
+    await user.save();
 
-    await user.save(); // Now validation is OK
-
-    await Log.create({
-      action: `Registered as ${role}`,
-      user: email,
-      role,
-      ip: req.ip,
-      timestamp: new Date(),
-    });
+    await logAction(`Registered as ${role}`, email, role, req.ip);
 
     res.status(200).json({ message: "Registration complete. You can now login." });
   } catch (err) {
@@ -111,18 +127,11 @@ router.post("/register", async (req, res) => {
       email,
       role,
       password: await bcrypt.hash(password, 10),
-      isVerified: true
+      isVerified: true,
     });
 
     await user.save();
-
-    await Log.create({
-      action: `Registered as ${role}`,
-      user: email,
-      role,
-      ip: req.ip,
-      timestamp: new Date(),
-    });
+    await logAction(`Registered as ${role}`, email, role, req.ip);
 
     res.status(201).json({ message: "User registered" });
   } catch (err) {
@@ -147,13 +156,7 @@ router.post("/login", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    await Log.create({
-      action: `Logged in`,
-      user: email,
-      role: user.role,
-      ip: req.ip,
-      timestamp: new Date(),
-    });
+    await logAction("Logged in", email, user.role, req.ip);
 
     res.status(200).json({
       message: "Login successful",
@@ -163,6 +166,22 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     console.error("❌ Login Error:", err);
     res.status(500).json({ message: "Login failed" });
+  }
+});
+
+// 🔹 Manual Log Test Route (optional)
+router.get("/test-log", async (req, res) => {
+  try {
+    const result = await Log.create({
+      action: "Manual Test",
+      user: "admin@example.com",
+      role: "admin",
+      ip: req.ip,
+      timestamp: new Date(),
+    });
+    res.send("✅ Log created: " + result._id);
+  } catch (err) {
+    res.status(500).send("❌ Log failed: " + err.message);
   }
 });
 

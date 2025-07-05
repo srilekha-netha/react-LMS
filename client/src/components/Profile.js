@@ -27,7 +27,7 @@ function Profile() {
         expertise: user.expertise || "",
       });
     }
-  }, []);
+  }, [user]); // ✅ Fix: Added `user` to dependency array
 
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });

@@ -1,4 +1,3 @@
-// src/components/admin/Logs.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Container, Card, Table, Spinner, Alert } from "react-bootstrap";
@@ -12,14 +11,18 @@ function Logs() {
     const fetchLogs = async () => {
       try {
         const res = await axios.get("http://localhost:5000/api/admin/logs");
-        const sortedLogs = res.data.sort(
-          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
-        );
-        setLogs(sortedLogs);
-        setLoading(false);
+        if (Array.isArray(res.data)) {
+          const sorted = res.data.sort(
+            (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+          );
+          setLogs(sorted);
+        } else {
+          setError("Invalid logs data received.");
+        }
       } catch (err) {
         console.error("❌ Failed to fetch logs:", err);
         setError("Failed to load logs. Please try again later.");
+      } finally {
         setLoading(false);
       }
     };
@@ -42,7 +45,7 @@ function Logs() {
           ) : logs.length === 0 ? (
             <p className="text-center">No logs found.</p>
           ) : (
-            <Table striped bordered hover responsive>
+            <Table striped bordered hover responsive className="mt-3">
               <thead className="table-dark">
                 <tr>
                   <th>#</th>
@@ -57,11 +60,15 @@ function Logs() {
                 {logs.map((log, index) => (
                   <tr key={log._id || index}>
                     <td>{index + 1}</td>
-                    <td>{log.action}</td>
-                    <td>{log.user}</td>
-                    <td>{log.role}</td>
-                    <td>{log.ip || "N/A"}</td>
-                    <td>{new Date(log.timestamp).toLocaleString()}</td>
+                    <td className="text-wrap">{log.action || "-"}</td>
+                    <td className="text-wrap">{log.user || "-"}</td>
+                    <td>{log.role || "-"}</td>
+                    <td>{log.ip || "-"}</td>
+                    <td>
+                      {log.timestamp
+                        ? new Date(log.timestamp).toLocaleString()
+                        : "-"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

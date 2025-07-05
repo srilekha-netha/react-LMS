@@ -37,7 +37,7 @@ app.use("/api/notifications", require("./routes/notification"));
 app.use("/api/payments", require("./routes/payment"));
 
 // ✅ Admin routes
-app.use("/api/admin/logs", require("./routes/adminLogs"));
+app.use("/api/admin", require("./routes/adminLogs"));
 app.use("/api/admin/users", require("./routes/usersadmin"));
 app.use("/api/admin/onboarding", require("./routes/teacheradmin"));
 app.use("/api/admin/reports", require("./routes/adminReports"));
