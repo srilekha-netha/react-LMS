@@ -1,255 +1,218 @@
-.container {
-  padding: 1rem;
+/* Container Styling */
+.explore-container {
+  padding: 2rem 2.5rem;
+  background-color: #f4f7fb;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
+
 .explore-title {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 30px;
+  font-size: 2rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #2c3e50;
+  letter-spacing: 0.5px;
 }
+
+/* Grid Layout */
 .course-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  animation: fadeIn 0.6s ease-in-out;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card Styling */
 .course-card {
-  background-color: #fff;
+  background: linear-gradient(145deg, #ffffff, #eef2f7);
   border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+  border: 1px solid #dce3ed;
 }
+
+.course-card:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Badge */
+.badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background-color: #ff4757;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+/* Thumbnail */
 .img-wrap {
-  height: 160px;
+  height: 180px;
+  background-color: #f6f9fc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
+
 .course-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
+
 .no-img {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f2f2f2;
-  color: #888;
-  font-size: 14px;
+  font-size: 1rem;
+  color: #aaa;
 }
+
+/* Course Info */
 .info {
-  padding: 16px;
+  padding: 1rem 1.2rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
+
 .title {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 8px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #2d3436;
+  margin-bottom: 0.6rem;
 }
+
 .meta {
-  font-size: 14px;
-  color: #444;
-  margin-bottom: 6px;
+  font-size: 0.95rem;
+  color: #4b5563;
+  margin-bottom: 0.4rem;
 }
+
+/* Enroll Button */
 .enroll {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 0;
-  font-size: 14px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  width: 100%;
   margin-top: auto;
+  padding: 0.6rem;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
 }
+
+.enroll:hover {
+  background-color: #0056b3;
+}
+
+/* Modal Styling */
 .modal-backdrop {
-  position: fixed;
+  position: absolute; /* ✅ changed from fixed */
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  width: 100%;
+  min-height: 100%;
+  background-color: transparent; /* ✅ no black overlay */
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 10px;
-  z-index: 999;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+  box-sizing: border-box;
 }
+
+
 .modal-card {
-  display: flex;
-  background: white;
-  border-radius: 12px;
+  background-color: white;
+  max-width: 850px;
   width: 100%;
-  max-width: 700px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-}
-.modal-left {
-  flex: 1.2;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-}
-.modal-right {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.modal-img {
-  width: 100%;
-  max-height: 250px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-.coupon-box {
-  display: flex;
-  gap: 8px;
-  margin: 15px 0;
-}
-.coupon-input {
-  flex: 1;
-  padding: 8px;
-  font-size: 14px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-.btn-apply {
-  background: #007bff;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-.apply-msg {
-  color: green;
-  font-size: 14px;
-  margin-bottom: 10px;
-}
-.btn-enroll {
-  background: #28a745;
-  color: white;
-  padding: 12px;
-  width: 100%;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  font-size: 16px;
-  cursor: pointer;
-}
-.close-btn {
-  position: absolute;
-  top: 10px;
-  right: 14px;
-  font-size: 28px;
-  cursor: pointer;
-  color: #555;
-}
-.close-btn:hover {
-  color: #000;
-}
-@media (max-width: 768px) {
-  .modal-card {
-    flex-direction: column;
-    padding: 0;
-  }
-  .modal-left,
-  .modal-right {
-    padding: 15px;
-  }
-  .modal-img {
-    width: 100%;
-    max-height: 200px;
-  }
-}
-.cd-container {
+  border-radius: 16px;
   display: flex;
   flex-wrap: wrap;
-  margin: 1rem;
+  box-shadow: transparent;
+  position: relative;
+  overflow: hidden;
 }
-.cd-sidebar {
-  flex: 1 1 200px;
-  max-width: 250px;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
+
+.modal-left,
+.modal-right {
+  flex: 1 1 320px;
+  padding: 1.5rem;
 }
-.cd-sidebar h5 { margin-bottom: 1rem; }
-.cd-progress-bar {
-  background: #e9ecef;
-  height: 8px;
-  border-radius: 4px;
-  margin-bottom: 1rem;
+
+.modal-img {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 10px;
 }
-.cd-progress-filled {
-  background: #007bff;
-  height: 100%;
-  border-radius: 4px;
-}
-.cd-sidebar ul {
-  list-style: none;
-  padding: 0;
-}
-.cd-sidebar li {
-  padding: 8px;
-  margin-bottom: 4px;
+
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #333;
   cursor: pointer;
-  border-radius: 4px;
 }
-.cd-sidebar li.active {
-  background: #007bff;
-  color: white;
+
+/* Coupon Section */
+.coupon-box {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
 }
-.cd-sidebar li.locked {
-  opacity: 0.5;
-  cursor: not-allowed;
+
+.coupon-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
 }
-.cd-content {
-  flex: 3 1 400px;
-  padding: 1rem;
-}
-.cd-card {
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-.cd-video {
-  width: 100%;
-  max-height: 360px;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-}
-.cd-btn {
-  display: inline-block;
-  padding: 8px 12px;
+
+.btn-apply,
+.btn-enroll {
+  padding: 0.55rem 1rem;
+  background-color: #28a745;
   border: none;
-  border-radius: 4px;
-  text-decoration: none;
-  margin-bottom: 1rem;
-}
-.cd-btn-pdf {
-  background: #6c757d;
   color: white;
-}
-.cd-section {
-  margin-top: 1.5rem;
-}
-.cd-quiz-question {
-  margin-bottom: 1rem;
-}
-.cd-btn-quiz {
-  background: #28a745;
-  color: white;
+  font-weight: 500;
+  border-radius: 8px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-/* Responsive: stack sidebar & content */
-@media (max-width: 768px) {
-  .cd-container { flex-direction: column; }
-  .cd-sidebar { max-width: 100%; margin-bottom: 1rem; }
-  .cd-content { max-width: 100%; }
+.btn-apply:hover,
+.btn-enroll:hover {
+  background-color: #218838;
 }
 
+.apply-msg {
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  color: #007bff;
+}

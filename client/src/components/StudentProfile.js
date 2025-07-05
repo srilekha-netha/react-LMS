@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import "./StudentDashboard.css";
 
 function StudentProfile() {
   const [profile, setProfile] = useState({ name: "", email: "" });
@@ -9,8 +10,7 @@ function StudentProfile() {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
-    axios.get(`http://localhost:5000/api/users/${user._id}`)
-      .then(res => setProfile(res.data));
+    axios.get(`http://localhost:5000/api/users/${user._id}`).then((res) => setProfile(res.data));
   }, []);
 
   const handleEdit = () => setEdit(true);
@@ -20,61 +20,84 @@ function StudentProfile() {
     const res = await axios.put(`http://localhost:5000/api/users/${user._id}`, profile);
     setProfile(res.data);
     setEdit(false);
-    setMsg("Profile updated!");
+    setMsg("✅ Profile updated successfully!");
+    setTimeout(() => setMsg(""), 3000);
   };
 
   const handlePasswordChange = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
     try {
       await axios.post(`http://localhost:5000/api/users/${user._id}/change-password`, passwords);
-      setMsg("Password changed!");
+      setMsg("🔒 Password changed!");
       setPasswords({ oldPassword: "", newPassword: "" });
     } catch (err) {
-      setMsg(err.response?.data?.message || "Error changing password");
+      setMsg(err.response?.data?.message || "❌ Error changing password");
     }
+    setTimeout(() => setMsg(""), 3000);
   };
 
   return (
-    <div>
-      <h2>Profile & Settings</h2>
-      <div>
-        <label>Name: </label>
-        {edit ? (
-          <input value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} />
-        ) : (
-          <span>{profile.name}</span>
-        )}
+    <div className="profile-container">
+      <h2 className="fade-in">👤 Profile & Settings</h2>
+      <br></br>
+      <div className="grid-container fade-in">
+        {/* Left: Profile Info */}
+        <div className="profile-card">
+          <div className="form-group">
+            <label>Name:</label>
+            {edit ? (
+              <input value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
+            ) : (
+              <span>{profile.name}</span>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>Email:</label>
+            {edit ? (
+              <input value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} />
+            ) : (
+              <span>{profile.email}</span>
+            )}
+          </div>
+
+          <div className="btn-group">
+            {edit ? (
+              <button className="btn save-btn" onClick={handleSave}>
+                💾 Save
+              </button>
+            ) : (
+              <button className="btn edit-btn" onClick={handleEdit}>
+                ✏️ Edit
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Right: Password Change */}
+        <div className="profile-card password-section">
+          <h4>🔐 Change Password</h4>
+          <input
+            type="password"
+            placeholder="Old Password"
+            value={passwords.oldPassword}
+            onChange={(e) => setPasswords({ ...passwords, oldPassword: e.target.value })}
+          />
+          <input
+            type="password"
+            placeholder="New Password"
+            value={passwords.newPassword}
+            onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+          />
+          <button className="btn change-btn" onClick={handlePasswordChange}>
+            Change Password
+          </button>
+        </div>
       </div>
-      <div>
-        <label>Email: </label>
-        {edit ? (
-          <input value={profile.email} onChange={e => setProfile({ ...profile, email: e.target.value })} />
-        ) : (
-          <span>{profile.email}</span>
-        )}
-      </div>
-      {edit
-        ? <button onClick={handleSave}>Save</button>
-        : <button onClick={handleEdit}>Edit</button>
-      }
-      <div style={{ marginTop: 20 }}>
-        <h4>Change Password</h4>
-        <input
-          type="password"
-          placeholder="Old Password"
-          value={passwords.oldPassword}
-          onChange={e => setPasswords({ ...passwords, oldPassword: e.target.value })}
-        />
-        <input
-          type="password"
-          placeholder="New Password"
-          value={passwords.newPassword}
-          onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
-        />
-        <button onClick={handlePasswordChange}>Change</button>
-      </div>
-      <p>{msg}</p>
+
+      {msg && <div className="msg-box fade-in">{msg}</div>}
     </div>
   );
 }
+
 export default StudentProfile;

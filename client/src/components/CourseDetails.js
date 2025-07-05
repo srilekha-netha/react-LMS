@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
+import "./StudentDashboard.css";
 
 export default function CourseDetails() {
   const { search } = useLocation();
@@ -111,7 +112,7 @@ export default function CourseDetails() {
         <ul>
           {course.chapters.map((ch, i) => {
             const isUnlocked = i < enrollment.chaptersUnlocked;
-            const isCompleted = i < enrollment.completedQuizzes?.length;
+            // const isCompleted = i < enrollment.completedQuizzes?.length;
             return (
               <li
                 key={i}
@@ -119,7 +120,7 @@ export default function CourseDetails() {
                 onClick={() => isUnlocked && setCurrentChapter(i)}
               >
                 {ch.title || `Chapter ${i + 1}`}
-                {isCompleted && <span className="check-icon">✅</span>}
+                {!isUnlocked && <span className="lock-icon">🔒</span>}
               </li>
             );
           })}
@@ -223,80 +224,6 @@ export default function CourseDetails() {
           )}
         </div>
       </main>
-
-      {/* Inline CSS for simplicity */}
-      <style>{`
-        .cd-container {
-          display: flex;
-          min-height: 100vh;
-        }
-        .cd-sidebar {
-          width: 260px;
-          background: #f8f9fa;
-          padding: 20px;
-          border-right: 1px solid #ddd;
-        }
-        .cd-sidebar h5 {
-          font-size: 18px;
-          font-weight: bold;
-          color: #0d6efd;
-          margin-bottom: 16px;
-        }
-        .cd-sidebar ul {
-          list-style: none;
-          padding: 0;
-        }
-        .cd-sidebar li {
-          background: #eee;
-          margin-bottom: 8px;
-          padding: 10px 14px;
-          border-radius: 8px;
-          cursor: pointer;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          transition: 0.2s;
-        }
-        .cd-sidebar li.active {
-          background: #0d6efd;
-          color: white;
-          font-weight: bold;
-        }
-        .cd-sidebar li.active .check-icon {
-          color: white;
-        }
-        .check-icon {
-          color: #28a745;
-          margin-left: 8px;
-        }
-        .cd-content {
-          flex: 1;
-          padding: 20px;
-        }
-        .cd-progress-bar {
-          height: 6px;
-          background: #ddd;
-          border-radius: 4px;
-          margin-bottom: 15px;
-        }
-        .cd-progress-filled {
-          height: 100%;
-          background: #0d6efd;
-          border-radius: 4px;
-        }
-        .cd-card {
-          background: white;
-          padding: 20px;
-          border-radius: 12px;
-          box-shadow: 0 0 10px rgba(0,0,0,0.05);
-        }
-        .cd-video {
-          width: 100%;
-          max-height: 360px;
-          border-radius: 12px;
-          margin-top: 12px;
-        }
-      `}</style>
     </div>
   );
 }

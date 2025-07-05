@@ -820,6 +820,7 @@ input[type="file"] {
   background: #f3f5fa;
   display: flex;
   flex-direction: column;
+  
 }
 
 /* HEADER */
@@ -828,7 +829,7 @@ input[type="file"] {
   top: 0;
   z-index: 1001;
   width: 100%;
-  background: linear-gradient(90deg, #2563eb 0, #0d6efd 100%);
+  background: linear-gradient(90deg, #192038 0, #192038 100%);
   color: #fff;
   padding: 0.75rem 2.2rem;
   display: flex;
@@ -874,21 +875,17 @@ input[type="file"] {
 }
 
 /* SIDEBAR */
+/* Sidebar */
 .teacher-sidebar {
-  background: #192038;
-  color: #fff;
-  width: 235px;
-  flex: 0 0 235px;
-  display: flex;
-  flex-direction: column;
-  padding: 1.7rem 1rem 2.1rem 1.4rem;
-  min-height: calc(100vh - 70px);
-  position: sticky;
-  top: 62px;
-  z-index: 10;
-  box-shadow: 0 2px 12px #00000018;
-  transition: box-shadow 0.18s;
+  padding-top: 2rem;
+  max-height: 100vh; /* restrict height to the viewport */
+  overflow-y: auto;  /* enable scrolling only when needed */
+  overflow-x: hidden;
+  position: sticky;  /* optionally stick to top while scrolling */
+  top: 0;
+  background-color: #192038;
 }
+
 .sidebar-title {
   text-align: center;
   font-size: 1.13rem;
@@ -956,6 +953,8 @@ input[type="file"] {
   min-height: 100vh;
   box-shadow: 0 4px 18px #2563eb13;
   animation: contentFadeIn 0.33s;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 @keyframes contentFadeIn {
   from { opacity: 0; transform: translateY(12px);}
@@ -966,6 +965,8 @@ input[type="file"] {
 @media (max-width: 1050px) {
   .teacher-page-content {
     padding: 1.5rem 0.6rem;
+    margin-bottom: 0;
+  padding-bottom: 0;
   }
   .teacher-sidebar {
     padding: 1.2rem 0.6rem 1.3rem 0.6rem;
@@ -1001,7 +1002,7 @@ background: linear-gradient(90deg, #a21caf 0%, #7c3aed 100%) !important;  displa
     flex-direction: column;
   }
   .teacher-sidebar {
-    position: static;
+    position: fixed;
     width: 100vw;
     flex-basis: unset;
     flex-direction: row;
@@ -1059,6 +1060,8 @@ background: linear-gradient(90deg, #a21caf 0%, #7c3aed 100%) !important;  displa
     border-radius: 1.05em;
     padding: 0.88em 0.25em 1.3em 0.25em;
     min-height: 82vh;
+    margin-bottom: 0;
+  padding-bottom: 0;
   }
 }
 .courses-list {
@@ -1353,3 +1356,521 @@ background: linear-gradient(90deg, #a21caf 0%, #7c3aed 100%) !important;  displa
   }
 }
 
+
+.profile-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  animation: fadeInUp 0.5s ease-in-out;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #333;
+  font-size: 2rem;
+}
+
+/* Grid Layout */
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.profile-card {
+  background-color: #ffffff;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.profile-card:hover {
+  transform: translateY(-3px);
+}
+
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.form-group span {
+  display: inline-block;
+  padding: 0.5rem 0.2rem;
+  font-size: 1rem;
+}
+
+.btn-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.edit-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #0069d9;
+}
+
+.save-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #218838;
+}
+
+.change-btn {
+  background-color: #ffc107;
+  color: black;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.change-btn:hover {
+  background-color: #e0a800;
+}
+
+.password-section input {
+  display: block;
+  margin-bottom: 1rem;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.msg-box {
+  text-align: center;
+  margin-top: 1.5rem;
+  background-color: #e2e6ea;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeInUp 0.6s ease;
+}
+
+/* Responsive Layout */
+@media (max-width: 768px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-group {
+    justify-content: center;
+  }
+
+  .change-btn {
+    width: auto;
+  }
+}
+
+
+.message-wrapper {
+  padding: 2rem;
+  max-width: 1100px;
+  margin: auto;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  color: #333;
+}
+
+.grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 2rem;
+}
+
+.send-box {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.send-box select,
+.send-box input {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.send-box button {
+  padding: 0.6rem;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.send-box button:hover {
+  background-color: #0056b3;
+}
+
+.tab-box {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tabs button {
+  padding: 0.6rem 1rem;
+  border: none;
+  background-color: #eee;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.tabs .active {
+  background-color: #007bff;
+  color: white;
+}
+
+.message-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.message-card {
+  background-color: #f9f9f9;
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+  transition: transform 0.2s;
+}
+
+.message-card:hover {
+  transform: translateX(3px);
+}
+
+.message-card button {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.4rem 0.7rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  float: right;
+}
+
+.message-card button:hover {
+  background-color: #b52a38;
+}
+
+.empty {
+  text-align: center;
+  color: gray;
+  margin-top: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.assignment-container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.heading {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  color: #2c3e50;
+}
+
+.upload-section {
+  margin-bottom: 3rem;
+}
+
+.upload-card {
+  background: #fdfdfd;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.upload-card select,
+.upload-card input {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.upload-card button {
+  width: fit-content;
+  align-self: flex-start;
+  padding: 0.6rem 1.2rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.upload-card button:hover {
+  background-color: #218838;
+}
+
+.upload-card button {
+  margin: 0 auto;
+}
+
+
+.message {
+  font-weight: bold;
+  color: #444;
+}
+
+.submission-section {
+  margin-top: 2rem;
+}
+
+.section-title {
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.submission-table {
+  width: 100%;
+  border-collapse: collapse;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.submission-table th,
+.submission-table td {
+  padding: 0.8rem;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.submission-table thead {
+  background-color: #343a40;
+  color: white;
+}
+
+.badge {
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.badge.graded {
+  background-color: #28a745;
+  color: white;
+}
+
+.badge.pending {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.empty-box {
+  padding: 1rem;
+  background: #f9f9f9;
+  border: 1px dashed #aaa;
+  text-align: center;
+  color: #777;
+  border-radius: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .upload-card {
+    padding: 1rem;
+  }
+
+  .submission-table th,
+  .submission-table td {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
+}
+
+/* === CourseDetails Page Sidebar and Layout === */
+.cd-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.cd-sidebar {
+  width: 260px;
+  background: #2f3b46;
+  padding: 20px;
+  border-radius: 12px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.cd-sidebar h5 {
+  color: #ffffff;
+  font-size: 20px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.cd-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cd-sidebar li {
+  background-color: #ecf0f1;
+  color: #2c3e50;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.cd-sidebar li:hover {
+  transform: scale(1.02);
+}
+
+.cd-sidebar li.active {
+  background-color: #d4f3f9;
+  color: #007bff;
+  font-weight: 600;
+  border: 2px solid #b2ebf2;
+}
+
+.cd-sidebar li.locked {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.lock-icon {
+  font-size: 16px;
+  margin-left: 8px;
+}
+
+.cd-progress-bar {
+  height: 6px;
+  background: #ffffff44;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.cd-progress-filled {
+  height: 100%;
+  background: #00c2ff;
+  border-radius: 4px;
+  transition: width 0.3s ease-in-out;
+}
+
+.cd-content {
+  flex: 1;
+  padding: 20px;
+}
+
+.cd-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+.cd-video {
+  width: 100%;
+  max-height: 360px;
+  border-radius: 12px;
+  margin-top: 12px;
+}
+
+.student-footer ul li a:hover {
+  text-decoration: underline;
+  color: #f8f9fa;
+}
