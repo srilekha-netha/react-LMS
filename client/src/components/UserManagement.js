@@ -1,7 +1,5 @@
-// src/components/UserManagement.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "./StudentDashboard.css";
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -27,7 +25,7 @@ function UserManagement() {
         `http://localhost:5000/api/admin/users/${userId}/role`,
         { role: newRole }
       );
-      await fetchUsers();
+      fetchUsers();
     } catch {
       alert("Failed to update role");
     }
@@ -39,7 +37,7 @@ function UserManagement() {
         `http://localhost:5000/api/admin/users/${userId}/block`,
         { blocked: !isBlocked }
       );
-      await fetchUsers();
+      fetchUsers();
     } catch {
       alert("Failed to update block status");
     }
@@ -49,25 +47,25 @@ function UserManagement() {
     if (!window.confirm("Delete this user?")) return;
     try {
       await axios.delete(`http://localhost:5000/api/admin/users/${userId}`);
-      await fetchUsers();
+      fetchUsers();
     } catch {
       alert("Failed to delete user");
     }
   };
 
-  // ✅ Safe filter logic to avoid undefined .toLowerCase()
   const filtered = users.filter((u) => {
     const byRole = filterRole === "all" || u.role === filterRole;
     const name = u.name || "";
     const email = u.email || "";
-    const byText =
-      name.toLowerCase().includes(search.toLowerCase()) ||
-      email.toLowerCase().includes(search.toLowerCase());
-    return byRole && byText;
+    return (
+      byRole &&
+      (name.toLowerCase().includes(search.toLowerCase()) ||
+        email.toLowerCase().includes(search.toLowerCase()))
+    );
   });
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid mt-4">
       <h2 className="mb-4 fw-bold">👥 User Management</h2>
 
       <div className="d-flex mb-3 align-items-center">
@@ -92,7 +90,7 @@ function UserManagement() {
       </div>
 
       <div className="table-responsive">
-        <table className="table dashboard-table">
+        <table className="table">
           <thead>
             <tr>
               <th>Name</th>
@@ -122,32 +120,28 @@ function UserManagement() {
                   </td>
                   <td>
                     <span
-                      className={`dashboard-badge-status ${
-                        user.blocked
-                          ? "bg-danger text-white"
-                          : "bg-success text-white"
-                      }`}
+                      className={`badge ${
+                        user.blocked ? "bg-danger" : "bg-success"
+                      } text-white`}
                     >
                       {user.blocked ? "Blocked" : "Active"}
                     </span>
                   </td>
                   <td className="text-end">
-                    <div className="d-flex justify-content-end gap-2">
-                      <button
-                        className="btn btn-sm btn-outline-warning dashboard-action-btn"
-                        onClick={() =>
-                          handleBlockToggle(user._id, user.blocked)
-                        }
-                      >
-                        {user.blocked ? "Unblock" : "Block"}
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-danger dashboard-action-btn"
-                        onClick={() => handleDelete(user._id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    <button
+                      className="btn btn-sm btn-outline-warning me-2"
+                      onClick={() =>
+                        handleBlockToggle(user._id, user.blocked)
+                      }
+                    >
+                      {user.blocked ? "Unblock" : "Block"}
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => handleDelete(user._id)}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))
