@@ -1,6 +1,8 @@
+// src/components/Logs.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Container, Card, Table, Spinner, Alert } from "react-bootstrap";
+import { Container, Spinner, Alert } from "react-bootstrap";
+import "./AdminLayout.css"; // our merged CSS
 
 function Logs() {
   const [logs, setLogs] = useState([]);
@@ -31,51 +33,50 @@ function Logs() {
   }, []);
 
   return (
-    <Container className="my-4">
-      <Card>
-        <Card.Header as="h5">📋 System Logs & Activity</Card.Header>
-        <Card.Body>
-          {loading ? (
-            <div className="text-center my-4">
-              <Spinner animation="border" variant="primary" />
-              <p>Loading logs...</p>
-            </div>
-          ) : error ? (
-            <Alert variant="danger">{error}</Alert>
-          ) : logs.length === 0 ? (
-            <p className="text-center">No logs found.</p>
-          ) : (
-            <Table striped bordered hover responsive className="mt-3">
-              <thead className="table-dark">
-                <tr>
-                  <th>#</th>
-                  <th>Action</th>
-                  <th>User</th>
-                  <th>Role</th>
-                  <th>IP Address</th>
-                  <th>Timestamp</th>
+    <Container className="logs-container my-4">
+      <h2 className="logs-title mb-3">📋 System Logs & Activity</h2>
+
+      {loading ? (
+        <div className="text-center my-4">
+          <Spinner animation="border" variant="primary" />
+          <p className="mt-2">Loading logs...</p>
+        </div>
+      ) : error ? (
+        <Alert variant="danger">{error}</Alert>
+      ) : logs.length === 0 ? (
+        <p className="text-center">No logs found.</p>
+      ) : (
+        <div className="table-responsive logs-table-wrapper">
+          <table className="table logs-table">
+            <thead className="table-dark">
+              <tr>
+                <th>#</th>
+                <th>Action</th>
+                <th>User</th>
+                <th>Role</th>
+                <th>IP Address</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log, idx) => (
+                <tr key={log._id || idx}>
+                  <td data-label="#">{idx + 1}</td>
+                  <td data-label="Action">{log.action || "-"}</td>
+                  <td data-label="User">{log.user || "-"}</td>
+                  <td data-label="Role">{log.role || "-"}</td>
+                  <td data-label="IP Address">{log.ip || "-"}</td>
+                  <td data-label="Timestamp">
+                    {log.timestamp
+                      ? new Date(log.timestamp).toLocaleString()
+                      : "-"}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {logs.map((log, index) => (
-                  <tr key={log._id || index}>
-                    <td>{index + 1}</td>
-                    <td className="text-wrap">{log.action || "-"}</td>
-                    <td className="text-wrap">{log.user || "-"}</td>
-                    <td>{log.role || "-"}</td>
-                    <td>{log.ip || "-"}</td>
-                    <td>
-                      {log.timestamp
-                        ? new Date(log.timestamp).toLocaleString()
-                        : "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </Card.Body>
-      </Card>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </Container>
   );
 }

@@ -1,165 +1,337 @@
+/* AdminLayout.css */
 
-/* Global white background */
-html, body, #root {
+/* ───────────────── Reset & Base ───────────────────────── */
+* {
+  box-sizing: border-box;
   margin: 0;
-  height: 100%;
-  background: #ffffff !important;
+  padding: 0;
+}
+html, body {
+  width: 100%;
+  background: #fff;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  font-family: Arial, sans-serif;
+}
+#root {
+  width: 100%;
+  height: auto;
 }
 
-/* ─── Navbar fixed at top ───────────────────────────────────── */
+/* ───────────────── Fixed Header ───────────────────────── */
 .admin-navbar {
   position: fixed;
-  top: 0;
-  left: 0;
+  top: 0; left: 0; right: 0;
   height: 60px;
-  width: 100%;
   background: #0B1120;
   color: #fff;
   display: flex;
-  justify-content: space-between;   /* ensure left and right items spread */
   align-items: center;
-  padding: 0 20px;
-  gap: 1rem;
+  justify-content: space-between;
+  padding: 0 1rem;
   z-index: 1000;
 }
+.logo-title {
+  font-size: 1.25rem;
+}
+.admin-navbar .btn {
+  border-color: rgba(255,255,255,0.6);
+}
 
-.navbar-left,
-.navbar-right {
+/* ───────────────── Body: Sidebar + Main ───────────────── */
+.admin-body {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  margin-top: 60px; /* push below fixed header */
 }
 
-.sidebar-toggle-btn {
-  color: #0B1120;
-  background: #fff;
-}
-
-/* ─── Main layout ──────────────────────────────────────────── */
-.admin-main-content {
-  display: flex;
-  position: absolute;
-  top: 60px;
-  bottom: 0;
-  left: 0;
-  right: 0;
-}
-
-/* ─── Sidebar ───────────────────────────────────────────────── */
+/* ───────────────── Sidebar (desktop scroll) ───────────── */
 .admin-sidebar {
-  width: 220px;
+  width: 240px;
   background: #0B1120;
   color: #fff;
+  height: calc(100vh - 60px);
   overflow-y: auto;
-  padding: 20px 0;
+  padding: 1.25rem 0;
 }
-
 .sidebar-title {
-  margin: 0 20px 10px;
+  color: #60a5fa;
+  padding: 0 1.25rem 0.75rem;
+  font-size: 1.25rem;
 }
-
 .sidebar-nav {
   list-style: none;
-  padding: 0;
-  margin: 0;
 }
-
-.sidebar-nav-item {
-  margin-bottom: 5px;
+.sidebar-nav li {
+  margin-bottom: 0.75rem;
 }
-
 .sidebar-link {
   display: flex;
   align-items: center;
-  padding: 8px 20px;
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
   color: #fff;
   text-decoration: none;
-  border-radius: 4px;
-  transition: background 0.3s;
+  border-radius: 0.375rem;
+  transition: background 0.2s;
 }
-
-.sidebar-link:hover,
-.sidebar-nav-item.active .sidebar-link {
-  background: #0D6EFD;
-}
-
 .sidebar-icon {
-  margin-right: 8px;
+  margin-right: 1rem;
+  font-size: 1.3rem;
+}
+.sidebar-link:hover,
+.sidebar-nav li.active .sidebar-link {
+  background: #1E3150;
+}
+.admin-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.admin-sidebar::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
 }
 
-/* ─── Collapsed Sidebar ─────────────────────────────────────── */
-.admin-main-content.sidebar-collapsed .admin-sidebar {
-  width: 60px !important;
-}
-
-.admin-main-content.sidebar-collapsed .sidebar-title,
-.admin-main-content.sidebar-collapsed .sidebar-label {
-  display: none;
-}
-
-/* ─── Page & Footer Wrapper ────────────────────────────────── */
-.admin-page-with-footer {
+/* ───────────────── Main Content (desktop scroll) ───────── */
+.admin-content {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-/* ─── Main Content Area ───────────────────────────────────── */
-.admin-page-content {
-  flex: 1;
+  background: #f8f9fa;
+  height: calc(100vh - 60px);
   overflow-y: auto;
-  background: #fff;
-  padding: 20px;
+  padding: 1.5rem;
 }
-
-/* ─── Footer ───────────────────────────────────────────────── */
-.admin-footer {
-  background: #f1f1f1;
-  border-top: 1px solid #ddd;
-  padding: 10px 20px;
-  text-align: center;
-  font-size: 0.9rem;
-}
-
-/* ─── Metric Cards ─────────────────────────────────────────── */
-.admin-page-content .card {
-  background: #f8f9f9 !important;
-  border: 1px solid #e0e0e0 !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.admin-page-content .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2) !important;
-}
-
-/* ─── Full-Width Containers & Tables ──────────────────────── */
-.admin-page-content .container,
-.admin-page-content .container-fluid,
-.admin-page-content .table-responsive,
-.admin-page-content .table {
+.admin-content .container,
+.admin-content .container-fluid {
   width: 100% !important;
   max-width: 100% !important;
   padding: 0 !important;
   margin: 0 !important;
 }
+.admin-content .row {
+  width: 100% !important;
+  margin: 0 !important;
+}
+.admin-content [class*="col-"] {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
 
-/* ─── Responsive: Sidebar on Top ───────────────────────────── */
+/* ───────────────── Footer ─────────────────────────────── */
+.admin-footer {
+  background: #192038;
+  color: #fff;
+  text-align: center;
+  padding: 1rem 0;
+  margin-top: 2rem;
+}
+.footer-icons {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.footer-icons .btn,
+.footer-icons .btn-social {
+  color: #fff;
+  font-size: 1.5rem;
+  padding: 0;
+}
+
+/* ───────────────── Teacher Onboarding ─────────────────── */
+.onboarding-container {
+  padding: 1rem;
+}
+.onboarding-title {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+.table-responsive {
+  overflow-x: auto;
+}
+.dashboard-table {
+  width: 100%;
+  min-width: 600px;
+}
+
+/* ───────────────── Logs ──────────────────────────────── */
+.logs-container {
+  max-width: 100%;
+}
+.logs-title {
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.logs-table-wrapper {
+  overflow-x: auto;
+}
+.logs-table {
+  width: 100%;
+  min-width: 700px;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #fff;
+}
+.logs-table th,
+.logs-table td {
+  vertical-align: middle;
+  padding: 0.75rem;
+}
+
+/* ───────────────── Mobile (≤768px): single page-scroll ───────────────── */
 @media (max-width: 768px) {
-  .admin-sidebar {
+  /* 1) Header fixed */
+  .admin-navbar {
     position: fixed;
-    top: 60px;
-    width: 100%;
-    height: calc(100vh - 60px);
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    z-index: 1000;
   }
 
-  .admin-main-content.sidebar-collapsed .admin-sidebar {
-    width: 0;
+  /* 2) Make body a column under header */
+  .admin-body {
+    flex-direction: column;
+    margin-top: 60px; /* account for header */
   }
 
-  .admin-page-content {
-    margin-left: 0;
+  /* 3) Sidebar becomes full-width horizontal bar */
+  .admin-sidebar {
+    position: static;
     width: 100%;
+    height: auto;
+    overflow: hidden;    /* disable inner scrolling */
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+  }
+  .sidebar-nav {
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+  .sidebar-nav li {
+    margin: 0;
+  }
+  .sidebar-link {
+    padding: 0.5rem;
+    white-space: nowrap;
+    font-size: 1rem;
+  }
+  .sidebar-icon {
+    font-size: 1.3rem;
+    margin-right: 0.75rem;
+  }
+
+  /* 4) Main content flows directly under sidebar */
+  .admin-content {
+    position: static;
+    height: auto;
+    overflow: visible;   /* disable inner scrolling */
+    padding: 1rem;
+  }
+
+  /* 5) Responsive cards for Onboarding & Logs tables */
+  .dashboard-table thead,
+  .logs-table thead {
+    display: none;
+  }
+  .dashboard-table,
+  .dashboard-table tbody,
+  .dashboard-table tr,
+  .dashboard-table td,
+  .logs-table,
+  .logs-table tbody,
+  .logs-table tr,
+  .logs-table td {
+    display: block;
+    width: 100%;
+  }
+  .dashboard-table tr,
+  .logs-table tr {
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    background: #fff;
+  }
+  .dashboard-table td,
+  .logs-table td {
+    padding: 0.5rem 0;
+    position: relative;
+    text-align: left;
+  }
+  .dashboard-table td::before,
+  .logs-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    display: inline-block;
+    width: 90px;
+  }
+  .dashboard-table td[data-label="Actions"],
+  .logs-table td[data-label="Actions"] {
+    text-align: right;
+  }
+  .dashboard-table td[data-label="Actions"] .btn {
+    margin-left: 0.5rem;
+  }
+
+  /* 6) Footer at the end of the flow */
+  .admin-footer {
+    margin-top: 0;
+  }
+}
+/* ─── Dashboard Container & Grid ──────────────────── */
+.dashboard-container {
+  padding: 1.5rem;
+}
+.dashboard-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #192038;
+  margin-bottom: 1.5rem;
+}
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ─── Stat Cards ───────────────────────────────────── */
+.stat-card {
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: center;
+}
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+.stat-label {
+  font-size: 1.125rem;
+  color: #555;
+  margin-bottom: 0.75rem;
+}
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #0D6EFD; /* bootstrap primary blue */
+}
+
+/* ─── Responsive tweaks ────────────────────────────── */
+@media (max-width: 576px) {
+  .dashboard-title {
+    font-size: 1.75rem;
+  }
+  .stat-value {
+    font-size: 2rem;
+  }
+  .stat-card {
+    padding: 1.5rem 1rem;
   }
 }
