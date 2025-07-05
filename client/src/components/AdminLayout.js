@@ -1,19 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import "./AdminLayout.css";
 
 function AdminLayout() {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
 
-  React.useEffect(() => {
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css";
-  document.head.appendChild(link);
-}, []);
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css";
+    document.head.appendChild(link);
+  }, []);
 
-  const navItems = [
+   const navItems = [
     { to: "/admin", icon: "speedometer2", label: "Dashboard" },
     { to: "/admin/users", icon: "people-fill", label: "User Management" },
     { to: "/admin/courses", icon: "journal-bookmark-fill", label: "Course Management" },
@@ -21,11 +20,15 @@ function AdminLayout() {
     { to: "/admin/payments", icon: "wallet", label: "Payments" },
     { to: "/admin/reports", icon: "graph-up", label: "Reports" },
     { to: "/admin/coupons", icon: "ticket-perforated", label: "Coupons" },
+    { to: "/admin/settings", icon: "gear", label: "Settings" },
+    { to: "/admin/logs", icon: "shield-lock", label: "Logs" },
+    { to: "/admin/profile", icon: "person-circle", label: "Profile" },
   ];
 
   return React.createElement(
     "div",
     { className: "teacher-dashboard-wrapper" },
+
     // Top navbar
     React.createElement(
       "nav",
