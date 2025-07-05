@@ -20,7 +20,7 @@ function AdminLayout() {
 
   return (
     <div className="teacher-dashboard-wrapper">
-      <nav className="teacher-navbar">
+      <nav className="teacher-navbar admin-dark-navbar">
         <span className="fw-bold logo-title">🛠️ Admin Panel</span>
         <div className="d-flex align-items-center gap-4">
           <Link to="/admin/logout" className="btn btn-outline-light btn-sm teacher-logout-btn">

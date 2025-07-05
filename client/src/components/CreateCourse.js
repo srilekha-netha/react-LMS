@@ -160,7 +160,7 @@ function CreateCourse() {
 
           {/* Thumbnail upload and preview */}
           <div className="col-12 col-md-4 d-flex flex-column align-items-center">
-            <label className="form-label fw-medium">Thumbnail Image</label>
+            <label className="form-label fw-dark">Thumbnail Image</label>
             <div className="thumb-preview-area mb-2">
               {thumbPreview ? (
                 <img src={thumbPreview} alt="Thumbnail Preview" className="thumb-preview-img" />
@@ -168,7 +168,7 @@ function CreateCourse() {
                 <div className="thumb-placeholder">No Image</div>
               )}
             </div>
-            <input
+            <input  
               name="thumbnail"
               type="file"
               className="form-control"

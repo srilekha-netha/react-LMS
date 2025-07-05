@@ -34,7 +34,7 @@ function AdminDashboard() {
   ];
 
   return (
-    <div className="container mt-4">
+    <div className="admin container mt-4">
       <h2 className="mb-4 fw-bold">📊 Admin Dashboard</h2>
       <div className="row g-4">
         {statCards.map((stat, index) => (
@@ -48,7 +48,7 @@ function AdminDashboard() {
 function StatCard({ label, value }) {
   return (
     <div className="col-12 col-sm-6 col-md-4">
-      <div className="card shadow-sm text-center p-3 border-0 rounded-3">
+<div className="card dashboard-dark-card text-center p-3 border-0 rounded-3">
         <h5 className="mb-2 fw-semibold">{label}</h5>
         <h2 className="fw-bold text-primary">{value}</h2>
       </div>

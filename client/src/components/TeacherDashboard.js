@@ -1,6 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const TeacherDashboard = () => {
+  const [collapsed, setCollapsed] = useState(false);
+
+  const toggleSidebar = () => setCollapsed(!collapsed);
+
   return (
     <>
       {/* Bootstrap CSS & Icons CDN */}
@@ -21,15 +26,33 @@ const TeacherDashboard = () => {
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
           minHeight: "100vh",
+          
         }}
+        
       >
-        <div className="d-flex flex-column" style={{ backdropFilter: "brightness(0.9)", minHeight: "100vh" }}>
+        <div
+          className="d-flex flex-column"
+          style={{ backdropFilter: "brightness(0.9)", minHeight: "100vh" }}
+        >
           {/* Top Navbar */}
-          <nav className="navbar navbar-expand-lg navbar-dark bg-primary px-4">
+<nav className="navbar navbar-expand-lg navbar-dark px-4" style={{ backgroundColor: "#0d1b2a" }}>
             <span className="navbar-brand fw-bold">📘 LMS</span>
+
+            <button
+              onClick={toggleSidebar}
+              className="btn btn-outline-light btn-sm ms-3"
+              title="Toggle Sidebar"
+            >
+              <i className="bi bi-list"></i>
+            </button>
+
             <div className="ms-auto d-flex align-items-center gap-3 text-white">
-              <span><i className="bi bi-bell-fill me-1"></i> Notifications</span>
-              <span><i className="bi bi-person-circle me-1"></i> Teacher</span>
+              <span>
+                <i className="bi bi-bell-fill me-1"></i> Notifications
+              </span>
+              <span>
+                <i className="bi bi-person-circle me-1"></i> Teacher
+              </span>
               <button className="btn btn-outline-light btn-sm">
                 <i className="bi bi-box-arrow-right me-1"></i> Logout
               </button>
@@ -38,35 +61,79 @@ const TeacherDashboard = () => {
 
           <div className="d-flex flex-grow-1">
             {/* Sidebar */}
-            <aside className="bg-dark text-white p-4" style={{ width: "250px", opacity: 0.95 }}>
-              <h5 className="text-center mb-4">Teacher Panel</h5>
-              <nav className="nav flex-column">
-                <a href="#" className="nav-link text-white mb-2">
-                  <i className="bi bi-house-door-fill me-2"></i> Dashboard
-                </a>
-                <a href="#" className="nav-link text-white mb-2">
-                  <i className="bi bi-journal-bookmark me-2"></i> Courses
-                </a>
-                <a href="#" className="nav-link text-white mb-2">
-                  <i className="bi bi-plus-square me-2"></i> Create Course
-                </a>
-                <a href="#" className="nav-link text-white mb-2">
-                  <i className="bi bi-clipboard-check me-2"></i> Assignments
-                </a>
-                <a href="#" className="nav-link text-white mb-2">
-                  <i className="bi bi-people me-2"></i> Students
-                </a>
-                <a href="#" className="nav-link text-white mb-2">
-                  <i className="bi bi-chat-left-dots me-2"></i> Messages
-                </a>
-                <a href="#" className="nav-link text-white mb-2">
-                  <i className="bi bi-person me-2"></i> Profile
-                </a>
+            <aside
+              className={`bg-dark text-white p-3 d-flex flex-column align-items-${
+                collapsed ? "center" : "start"
+              } transition`}
+              style={{
+                width: collapsed ? "70px" : "250px",
+                transition: "width 0.3s ease",
+                overflow: "hidden",
+              }}
+            >
+              <h5
+                className={`text-center mb-4 ${
+                  collapsed ? "d-none" : ""
+                }`}
+              >
+                Teacher Panel
+              </h5>
+              <nav className="nav flex-column w-100">
+                <SidebarLink
+                  to="/teacher/dashboard"
+                  icon="bi-house-door-fill"
+                  label="Dashboard"
+                  collapsed={collapsed}
+                />
+                <SidebarLink
+                  to="/teacher/courses"
+                  icon="bi-journal-bookmark"
+                  label="Courses"
+                  collapsed={collapsed}
+                />
+                <SidebarLink
+                  to="/teacher/create-course"
+                  icon="bi-plus-square"
+                  label="Create Course"
+                  collapsed={collapsed}
+                />
+                <SidebarLink
+                  to="/teacher/assignments"
+                  icon="bi-clipboard-check"
+                  label="Assignments"
+                  collapsed={collapsed}
+                />
+                <SidebarLink
+                  to="/teacher/students"
+                  icon="bi-people"
+                  label="Students"
+                  collapsed={collapsed}
+                />
+                <SidebarLink
+                  to="/teacher/messages"
+                  icon="bi-chat-left-dots"
+                  label="Messages"
+                  collapsed={collapsed}
+                />
+                <SidebarLink
+                  to="/teacher/profile"
+                  icon="bi-person"
+                  label="Profile"
+                  collapsed={collapsed}
+                />
               </nav>
             </aside>
 
-            {/* Main content */}
-            <main className="flex-grow-1 p-4 bg-light bg-opacity-75">
+            {/* Main Content */}
+<main
+  className="p-4 bg-light bg-opacity-75"
+  style={{
+    marginLeft: collapsed ? "70px" : "250px",
+    transition: "margin-left 0.3s ease",
+    width: "100%",
+    minHeight: "calc(100vh - 56px)",
+  }}
+>
               <h2 className="mb-4">Welcome, Teacher 👋</h2>
               <div className="row g-4">
                 <DashboardCard
@@ -96,6 +163,18 @@ const TeacherDashboard = () => {
   );
 };
 
+// Reusable Sidebar Link component
+const SidebarLink = ({ to, icon, label, collapsed }) => (
+  <Link
+    to={to}
+    className="nav-link text-white mb-2 d-flex align-items-center"
+  >
+    <i className={`bi ${icon} me-2 fs-5`}></i>
+    <span className={`sidebar-text ${collapsed ? "hidden" : ""}`}>{label}</span>
+  </Link>
+);
+
+// Dashboard card
 const DashboardCard = ({ title, icon, desc, color }) => (
   <div className="col-md-4">
     <div className="card shadow-sm border-0 h-100">
