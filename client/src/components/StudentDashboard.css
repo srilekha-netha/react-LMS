@@ -43,7 +43,7 @@
 }
 
 .chapter-sidebar {
-  width: 250px;
+  width: 350px;
   background: linear-gradient(135deg, #343a40, #495057);  /* changed from #f1f1f1 */
   color: white;
   border-radius: 8px;
@@ -878,6 +878,7 @@ input[type="file"] {
 /* Sidebar */
 .teacher-sidebar {
   padding-top: 2rem;
+  padding-left: 1rem;
   max-height: 100vh; /* restrict height to the viewport */
   overflow-y: auto;  /* enable scrolling only when needed */
   overflow-x: hidden;
@@ -1873,4 +1874,12 @@ h2 {
 .student-footer ul li a:hover {
   text-decoration: underline;
   color: #f8f9fa;
+}
+
+.card {
+  border-radius: 1rem;
+}
+
+.form-label {
+  font-weight: 500;
 }
