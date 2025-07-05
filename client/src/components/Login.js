@@ -16,9 +16,14 @@ function Login() {
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", form);
       const role = res.data.user.role;
-      setMessage("Login successful!");
-      localStorage.setItem("user", JSON.stringify(res.data.user));
 
+      setMessage("Login successful!");
+
+      // ✅ Save full user and name separately
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.setItem("studentName", res.data.user.name); // 👈 Add this line
+
+      // ✅ Navigate based on role
       if (role === "student") navigate("/student");
       else if (role === "teacher") navigate("/teacher");
       else if (role === "admin") navigate("/admin");

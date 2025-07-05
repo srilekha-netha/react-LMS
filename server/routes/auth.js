@@ -2,8 +2,8 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const sendOTP = require("../utils/sendEmail");
-const Log = require("../models/Log"); // ✅ Log model for audit trails
+const Log = require("../models/Log");
+const sendOTP = require("../utils/sendEmail"); // ✅ make sure this file exists
 
 const router = express.Router();
 
@@ -14,19 +14,25 @@ router.post("/send-otp", async (req, res) => {
     if (!email) return res.status(400).json({ message: "Email is required" });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+    const otpExpiresAt = Date.now() + 10 * 60 * 1000; // valid for 10 mins
 
     let user = await User.findOne({ email });
-    if (!user) user = new User({ email });
+
+    if (!user) {
+      user = new User({ email });
+    }
 
     user.otp = otp;
     user.otpExpiresAt = otpExpiresAt;
-    await user.save();
+    user.isVerified = false;
+
+    await user.save({ validateBeforeSave: false }); // 🔑 avoid name/password error
 
     await sendOTP(email, otp);
     res.status(200).json({ message: "OTP sent to email" });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("❌ OTP Send Error:", err);
+    res.status(500).json({ message: "Failed to send OTP" });
   }
 });
 
@@ -43,11 +49,13 @@ router.post("/verify-otp", async (req, res) => {
     user.isVerified = true;
     user.otp = null;
     user.otpExpiresAt = null;
-    await user.save();
+
+    await user.save({ validateBeforeSave: false });
 
     res.status(200).json({ message: "OTP verified successfully" });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("❌ OTP Verify Error:", err);
+    res.status(500).json({ message: "OTP verification failed" });
   }
 });
 
@@ -67,15 +75,25 @@ router.post("/set-password", async (req, res) => {
     user.name = name;
     user.role = role;
     user.password = await bcrypt.hash(password, 10);
-    await user.save();
+
+    await user.save(); // Now validation is OK
+
+    await Log.create({
+      action: `Registered as ${role}`,
+      user: email,
+      role,
+      ip: req.ip,
+      timestamp: new Date(),
+    });
 
     res.status(200).json({ message: "Registration complete. You can now login." });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("❌ Set Password Error:", err);
+    res.status(500).json({ message: "Registration failed" });
   }
 });
 
-// 🔹 Traditional Register (with logging)
+// 🔹 Traditional Register (skip OTP)
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -95,6 +113,7 @@ router.post("/register", async (req, res) => {
       password: await bcrypt.hash(password, 10),
       isVerified: true
     });
+
     await user.save();
 
     await Log.create({
@@ -107,11 +126,12 @@ router.post("/register", async (req, res) => {
 
     res.status(201).json({ message: "User registered" });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("❌ Register Error:", err);
+    res.status(500).json({ message: "Registration failed" });
   }
 });
 
-// 🔹 Login (with logging)
+// 🔹 Login
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -141,7 +161,8 @@ router.post("/login", async (req, res) => {
       token,
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("❌ Login Error:", err);
+    res.status(500).json({ message: "Login failed" });
   }
 });
 
