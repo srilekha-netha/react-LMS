@@ -24,7 +24,7 @@ html, body {
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 60px;
-  background: #0B1120;
+  background: #192038;
   color: #fff;
   display: flex;
   align-items: center;
@@ -48,11 +48,11 @@ html, body {
 /* ───────────────── Sidebar (desktop scroll) ───────────── */
 .admin-sidebar {
   width: 240px;
-  background: #0B1120;
+  background: #192038;
   color: #fff;
   height: calc(100vh - 60px);
   overflow-y: auto;
-  padding: 1.25rem 0;
+  padding: 2rem 0;
 }
 .sidebar-title {
   color: #60a5fa;
@@ -123,13 +123,13 @@ html, body {
   color: #fff;
   text-align: center;
   padding: 1rem 0;
-  margin-top: 2rem;
+  margin-top: 0.5rem;
 }
 .footer-icons {
   display: flex;
   justify-content: center;
   gap: 1.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0rem;
 }
 .footer-icons .btn,
 .footer-icons .btn-social {
