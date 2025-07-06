@@ -324,14 +324,49 @@ html, body {
 }
 
 /* ─── Responsive tweaks ────────────────────────────── */
+/* Mobile: collapsed vertical, icon-only sidebar (≤576px) */
 @media (max-width: 576px) {
-  .dashboard-title {
-    font-size: 1.75rem;
+  /* Hide all text */
+  .sidebar-title,
+  .sidebar-label {
+    display: none;
   }
-  .stat-value {
-    font-size: 2rem;
+
+  /* Collapse sidebar to 60px and stack icons vertically */
+  .admin-sidebar {
+    width: 60px;
+    padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;      /* allow scrolling if many items */
+    position: fixed;
+    top: 60px; left: 0;    /* keep it alongside the header */
+    bottom: 0;
+    background: #0B1120;    /* preserve background */
   }
-  .stat-card {
-    padding: 1.5rem 1rem;
+
+  /* Put each <li> on its own line */
+  .sidebar-nav {
+    display: block;
+  }
+  .sidebar-nav li {
+    margin: 0;
+  }
+
+  /* Center each icon in its 60px container */
+  .sidebar-link {
+    display: flex;
+    justify-content: center;
+    padding: 0.75rem 0;
+  }
+
+  /* Shift the main content over so it’s not hidden under the sidebar */
+  .admin-content {
+    margin-left: 60px;
+    position: relative;
+    top: 60px;  /* account for fixed header */
+    height: calc(100vh - 60px);
+    overflow-y: auto;
   }
 }
+
