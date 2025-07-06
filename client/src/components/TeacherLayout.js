@@ -6,14 +6,23 @@ export default function TeacherLayout() {
   const location = useLocation();
   const teacherName = localStorage.getItem("studentName") || "Teacher";
 
-  // load Font-Awesome for footer icons
+  // Load Font-Awesome for footer icons
   useEffect(() => {
     if (!document.querySelector('link[href*="font-awesome"]')) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href =
+      const fontAwesomeLink = document.createElement("link");
+      fontAwesomeLink.rel = "stylesheet";
+      fontAwesomeLink.href =
         "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css";
-      document.head.appendChild(link);
+      document.head.appendChild(fontAwesomeLink);
+    }
+
+    // Load Bootstrap Icons (required for sidebar icons)
+    if (!document.querySelector('link[href*="bootstrap-icons"]')) {
+      const bootstrapIconsLink = document.createElement("link");
+      bootstrapIconsLink.rel = "stylesheet";
+      bootstrapIconsLink.href =
+        "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css";
+      document.head.appendChild(bootstrapIconsLink);
     }
   }, []);
 
@@ -72,7 +81,7 @@ export default function TeacherLayout() {
         </main>
       </div>
 
-      {/* Footer at end of flow */}
+      {/* Footer */}
       <footer className="admin-footer">
         <div className="footer-icons">
           <a href="https://instagram.com/yourorg" className="btn-social">

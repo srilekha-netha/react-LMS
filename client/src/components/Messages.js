@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import "./TeacherLayout.css"; // Contains all styles including hover effects
 
 function Messages() {
   const [to, setTo] = useState("");
   const [content, setContent] = useState("");
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
-
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
     if (!user || !user._id) return;
 
-    // ✅ Load enrolled students (from teacher's courses)
+    // Fetch enrolled students
     axios
       .get(`http://localhost:5000/api/enrollments/byTeacher/${user._id}`)
       .then((res) => {
@@ -28,7 +28,7 @@ function Messages() {
         console.error("❌ Failed to fetch enrolled students", err);
       });
 
-    // ✅ Load inbox messages
+    // Fetch inbox messages
     axios
       .get(`http://localhost:5000/api/messages/inbox/${user._id}`)
       .then((res) => setMessages(res.data.reverse()))
@@ -51,12 +51,13 @@ function Messages() {
       alert("✅ Message sent!");
       setContent("");
 
-      // Refresh inbox
-      const updated = await axios.get(`http://localhost:5000/api/messages/inbox/${user._id}`);
+      const updated = await axios.get(
+        `http://localhost:5000/api/messages/inbox/${user._id}`
+      );
       setMessages(updated.data.reverse());
     } catch (err) {
       alert("❌ Failed to send message");
-      console.error("Axios POST error:", err);
+      console.error("Send error:", err);
     }
   };
 
@@ -76,37 +77,48 @@ function Messages() {
     <div className="container py-4">
       <h2 className="mb-4">Messages</h2>
 
-      <div className="mb-3">
-        <label>Send To:</label>
-        <select
-          className="form-select"
-          value={to}
-          onChange={(e) => setTo(e.target.value)}
-        >
-          <option value="">-- Select Student --</option>
-          {users.map((u) => (
-            <option key={u._id} value={u._id}>
-              {u.name} ({u.email})
-            </option>
-          ))}
-        </select>
+      {/* Send Message Box */}
+      <div className="message-box card shadow-sm mb-4">
+        <div className="card-header bg-primary text-white fw-bold">
+          ✉️ Send a Message
+        </div>
+        <div className="card-body">
+          <div className="mb-3">
+            <label>Send To:</label>
+            <select
+              className="form-select"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            >
+              <option value="">-- Select Student --</option>
+              {users.map((u) => (
+                <option key={u._id} value={u._id}>
+                  {u.name} ({u.email})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mb-3">
+            <label>Message:</label>
+            <textarea
+              className="form-control"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows="3"
+              placeholder="Write your message..."
+            />
+          </div>
+
+          <div className="text-end">
+            <button className="btn btn-primary" onClick={handleSend}>
+              Send Message
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="mb-3">
-        <label>Message:</label>
-        <textarea
-          className="form-control"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows="3"
-          placeholder="Write your message..."
-        />
-      </div>
-
-      <button className="btn btn-primary mb-4" onClick={handleSend}>
-        Send Message
-      </button>
-
+      {/* Inbox */}
       <hr />
       <h5>Inbox</h5>
       <ul className="list-group">
