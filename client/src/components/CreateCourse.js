@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "./StudentDashboard.css"; // External CSS
+import './TeacherLayout.css'; // External CSS
 
 function CreateCourse() {
   const [form, setForm] = useState({
@@ -11,7 +11,7 @@ function CreateCourse() {
     difficulty: "Beginner",
     price: "",
     thumbnail: null,
-    published: true
+    published: true,
   });
 
   const [msg, setMsg] = useState("");
@@ -51,7 +51,7 @@ function CreateCourse() {
       formData.append("teacher", user._id);
 
       await axios.post("http://localhost:5000/api/courses/create", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       setMsg("Course created successfully!");
@@ -66,11 +66,15 @@ function CreateCourse() {
   return (
     <div className="container create-course-container">
       <h2 className="mb-4 fw-bold">Create New Course</h2>
+
       <form className="create-course-form" onSubmit={handleSubmit} encType="multipart/form-data">
-        <div className="row g-3">
-          <div className="col-12 col-md-8">
-            <div className="form-group mb-3">
-              <label className="form-label fw-medium">Course Title<span className="text-danger">*</span></label>
+        <div className="row g-4">
+          {/* Left: Course Fields */}
+          <div className="col-md-8">
+            <div className="mb-3">
+              <label className="form-label fw-medium">
+                Course Title <span className="text-danger">*</span>
+              </label>
               <input
                 name="title"
                 type="text"
@@ -79,12 +83,13 @@ function CreateCourse() {
                 value={form.title}
                 onChange={handleChange}
                 required
-                autoFocus
               />
             </div>
 
-            <div className="form-group mb-3">
-              <label className="form-label fw-medium">Description<span className="text-danger">*</span></label>
+            <div className="mb-3">
+              <label className="form-label fw-medium">
+                Description <span className="text-danger">*</span>
+              </label>
               <textarea
                 name="description"
                 className="form-control"
@@ -93,13 +98,14 @@ function CreateCourse() {
                 value={form.description}
                 onChange={handleChange}
                 required
-                style={{ resize: "vertical" }}
               />
             </div>
 
-            <div className="row g-2">
+            <div className="row g-3">
               <div className="col-md-6">
-                <label className="form-label fw-medium">Category<span className="text-danger">*</span></label>
+                <label className="form-label fw-medium">
+                  Category <span className="text-danger">*</span>
+                </label>
                 <input
                   name="category"
                   type="text"
@@ -110,8 +116,11 @@ function CreateCourse() {
                   required
                 />
               </div>
+
               <div className="col-md-6">
-                <label className="form-label fw-medium">Difficulty<span className="text-danger">*</span></label>
+                <label className="form-label fw-medium">
+                  Difficulty <span className="text-danger">*</span>
+                </label>
                 <select
                   name="difficulty"
                   className="form-select"
@@ -126,9 +135,11 @@ function CreateCourse() {
               </div>
             </div>
 
-            <div className="row g-2 mt-2">
+            <div className="row g-3 mt-1">
               <div className="col-md-6">
-                <label className="form-label fw-medium">Price (₹)<span className="text-danger">*</span></label>
+                <label className="form-label fw-medium">
+                  Price (₹) <span className="text-danger">*</span>
+                </label>
                 <input
                   name="price"
                   type="number"
@@ -140,8 +151,9 @@ function CreateCourse() {
                   required
                 />
               </div>
+
               <div className="col-md-6 d-flex align-items-end">
-                <div className="form-check mb-0 ms-2">
+                <div className="form-check mb-0">
                   <input
                     type="checkbox"
                     className="form-check-input"
@@ -158,10 +170,10 @@ function CreateCourse() {
             </div>
           </div>
 
-          {/* Thumbnail upload and preview */}
-          <div className="col-12 col-md-4 d-flex flex-column align-items-center">
+          {/* Right: Thumbnail */}
+          <div className="col-md-4">
             <label className="form-label fw-medium">Thumbnail Image</label>
-            <div className="thumb-preview-area mb-2">
+            <div className="thumb-preview-box mb-2">
               {thumbPreview ? (
                 <img src={thumbPreview} alt="Thumbnail Preview" className="thumb-preview-img" />
               ) : (
@@ -175,18 +187,18 @@ function CreateCourse() {
               accept="image/*"
               onChange={handleChange}
             />
-            <small className="text-muted mt-1">Best size: 16:9 or 4:3</small>
+            <small className="text-muted d-block mt-1">Best size: 16:9</small>
           </div>
         </div>
 
-        <div className="mt-4 d-flex gap-3 justify-content-end">
+        <div className="mt-4 d-flex justify-content-end">
           <button type="submit" className="btn btn-lg btn-primary create-course-btn" disabled={loading}>
             {loading ? "Creating..." : "Create Course"}
           </button>
         </div>
 
         {msg && (
-          <div className={`alert mt-3 mb-0 ${msg.startsWith("Error") ? "alert-danger" : "alert-success"}`}>
+          <div className={`alert mt-3 ${msg.startsWith("Error") ? "alert-danger" : "alert-success"}`}>
             {msg}
           </div>
         )}

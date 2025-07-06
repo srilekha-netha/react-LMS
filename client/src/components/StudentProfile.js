@@ -39,42 +39,42 @@ function StudentProfile() {
   return (
     <div className="profile-container">
       <h2 className="fade-in">👤 Profile & Settings</h2>
-      <br></br>
+      <br />
       <div className="grid-container fade-in">
-        {/* Left: Profile Info */}
         <div className="profile-card">
-          <div className="form-group">
+          <div className="info-box">
             <label>Name:</label>
             {edit ? (
-              <input value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
+              <input
+                value={profile.name}
+                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+              />
             ) : (
               <span>{profile.name}</span>
             )}
           </div>
 
-          <div className="form-group">
+          <div className="info-box">
             <label>Email:</label>
             {edit ? (
-              <input value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} />
+              <input
+                value={profile.email}
+                onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+              />
             ) : (
               <span>{profile.email}</span>
             )}
           </div>
 
-          <div className="btn-group">
+          <div className="action-box">
             {edit ? (
-              <button className="btn save-btn" onClick={handleSave}>
-                💾 Save
-              </button>
+              <button className="btn save-btn" onClick={handleSave}>💾 Save</button>
             ) : (
-              <button className="btn edit-btn" onClick={handleEdit}>
-                ✏️ Edit
-              </button>
+              <button className="btn edit-btn" onClick={handleEdit}>✏️ Edit</button>
             )}
           </div>
         </div>
 
-        {/* Right: Password Change */}
         <div className="profile-card password-section">
           <h4>🔐 Change Password</h4>
           <input
