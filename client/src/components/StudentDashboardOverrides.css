@@ -1,20 +1,37 @@
-/* ───── Override: Fixed Header ───── */
+/* ───── StudentDashboardOverrides.css ───── */
+
+/* ───── Fixed Header ───── */
 .student-navbar {
   position: fixed !important;
   top: 0; left: 0; right: 0;
   height: 60px !important;
   background: #192038 !important;
-  color: #fff !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   padding: 0 1rem !important;
   z-index: 1000 !important;
 }
-
-/* make sure your logo and buttons sit nicely */
-.student-navbar .logo-title {
-  font-size: 1.25rem !important;
+.student-nav-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+}
+.logo-title {
+  font-size: 1.3rem !important;
+  font-weight: 600 !important;
+  color: #fff !important;
+}
+.student-nav-user {
+  display: flex !important;
+  align-items: center !important;
+  font-size: 1rem !important;
+  color: #fff !important;
+}
+.student-nav-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
 }
 .student-navbar .btn-outline-light,
 .student-navbar .btn-link {
@@ -22,81 +39,86 @@
   border-color: rgba(255,255,255,0.6) !important;
 }
 
-/* ───── Override: Layout Body ───── */
+/* ───── Layout Body ───── */
 .dashboard-body {
   display: flex !important;
-  margin-top: 60px !important; /* push below fixed header */
+  margin-top: 60px !important;
 }
 
-/* ───── Override: Sidebar ───── */
+/* ───── Sidebar ───── */
 .student-sidebar {
-  width: 240px !important;
+  width: 260px !important;
   background: #192038 !important;
   color: #fff !important;
-  height: calc(100vh - 60px) !important;
   position: sticky !important;
   top: 60px !important;
-  overflow-y: auto !important;
-  padding: 2rem 0 !important;
+  height: calc(100vh - 60px) !important;
+  overflow: hidden !important;
+  padding: 2.5rem 0 !important;
 }
-
-/* scrollbar tweaks */
-.student-sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-.student-sidebar::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 3px;
-}
-
-/* title in sidebar */
 .sidebar-title {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
   color: #60a5fa !important;
-  padding: 0 1.5rem 0.75rem !important;
-  font-size: 1.25rem !important;
-  font-weight: 600 !important;
+  padding: 0 2rem 1.5rem !important;
+  margin-bottom: 2rem !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
 }
-
-/* nav links */
 .sidebar-nav {
   list-style: none !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 .sidebar-nav-item {
-  margin-bottom: 0.75rem !important;
+  margin-bottom: 1rem !important;
 }
 .sidebar-link {
   display: flex !important;
   align-items: center !important;
-  padding: 0.85rem 1.5rem !important;
-  color: #fff !important;
+  padding: 1rem 2rem !important;
+  font-size: 1.125rem !important;
+  color: #e0e7ff !important;
   text-decoration: none !important;
-  border-radius: 0.375rem !important;
-  transition: background 0.2s !important;
+  border-radius: 0.5rem !important;
+  transition: background 0.2s, padding-left 0.2s !important;
 }
-.sidebar-link:hover,
+.sidebar-link:hover {
+  background: rgba(37,99,235,0.1) !important;
+  padding-left: 2.2rem !important;
+}
 .sidebar-nav-item.active .sidebar-link {
-  background: #1E3150 !important;
+  background: rgba(37,99,235,0.2) !important;
+  color: #fff !important;
 }
 .sidebar-icon {
   margin-right: 1rem !important;
-  font-size: 1.3rem !important;
+  font-size: 1.4rem !important;
 }
 .sidebar-label {
   flex: 1 !important;
 }
 
-/* ───── Override: Main Content ───── */
+/* ───── Main Content ───── */
 .student-page-content {
   flex: 1 !important;
   background: #f8f9fa !important;
   padding: 1.5rem !important;
-  min-height: calc(100vh - 60px) !important;
+  height: calc(100vh - 60px) !important;
   overflow-y: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.2) transparent;
+}
+.student-page-content::-webkit-scrollbar {
+  width: 8px;
+}
+.student-page-content::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 4px;
 }
 
-/* ───── Override: Footer ───── */
+/* ───── Footer ───── */
 .student-footer {
   background: #192038 !important;
   color: #fff !important;
@@ -117,4 +139,268 @@
 .student-footer p {
   font-size: 0.875rem !important;
   margin: 0 !important;
+}
+
+/* ───── "My Courses" Section Styles ───── */
+.sc-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+.sc-title {
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: #192038;
+}
+.sc-card {
+  border: none;
+  border-radius: 1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.sc-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+.sc-img-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  background: #f1f5f9;
+}
+.sc-img {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sc-noimg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-size: 1rem;
+}
+.sc-badge {
+  position: absolute;
+  top: 0.5rem; right: 0.5rem;
+  background: rgba(37, 99, 235, 0.9);
+  color: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.sc-course-title {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #192038;
+}
+.sc-desc {
+  font-size: 0.9rem;
+  color: #555;
+  flex: none;
+  min-height: 3rem;
+}
+.sc-btn {
+  width: 100%;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* ───── Responsive Breakpoints ───── */
+@media (max-width: 1050px) {
+  .student-sidebar { width: 80px !important; }
+  .sidebar-link {
+    justify-content: center !important;
+    padding: 1rem 0 !important;
+  }
+  .sidebar-icon { margin: 0 !important; }
+  .sidebar-label,
+  .sidebar-title { display: none !important; }
+  .logo-title { display: none !important; }
+}
+
+@media (max-width: 768px) {
+  .dashboard-body { flex-direction: column !important; }
+  .student-sidebar {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    padding: 0.5rem 0 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  }
+  .sidebar-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .sidebar-link { padding: 0.6rem 1rem !important; }
+  .sidebar-title,
+  .sidebar-label { display: none !important; }
+  .student-page-content {
+    height: calc(100vh - 60px - 40px) !important;
+    padding: 1rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-body {
+    flex-direction: column !important;
+    margin-top: 60px !important;
+  }
+  .student-sidebar {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    padding: 0.25rem 0 !important;
+    background: #192038 !important;
+  }
+  .sidebar-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .sidebar-nav-item { margin: 0 !important; }
+  .sidebar-link {
+    padding: 0.4rem 0.6rem !important;
+    justify-content: center !important;
+  }
+  .sidebar-icon { font-size: 1.2rem !important; }
+  .sidebar-title,
+  .sidebar-label { display: none !important; }
+  .student-page-content {
+    height: calc(100vh - 60px - 40px) !important;
+    padding: 0.75rem !important;
+  }
+  .student-footer { padding: 0.5rem 0 !important; }
+}
+/* ───── CourseDetails Responsive Overrides ───── */
+
+/* Container / layout */
+.cd-container {
+  display: flex;
+  min-height: 100vh;
+}
+@media (max-width: 768px) {
+  .cd-container {
+    flex-direction: column;
+    padding: 1rem;
+  }
+}
+
+/* Sidebar */
+.cd-sidebar {
+  flex: 0 0 260px;
+  background: #2f3b46;
+  color: #fff;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  position: sticky;
+  top: 60px;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+@media (max-width: 768px) {
+  .cd-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    margin-bottom: 1rem;
+  }
+}
+.cd-sidebar h5 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.cd-progress-bar {
+  background: #444;
+  height: 6px;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.cd-progress-filled {
+  background: #0d6efd;
+  height: 100%;
+  width: 0;
+  transition: width 0.3s ease;
+}
+.cd-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.cd-sidebar li {
+  background: #f1f5f9;
+  color: #333;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s;
+}
+.cd-sidebar li.active {
+  background: #cfe2ff;
+  color: #0d6efd;
+}
+.cd-sidebar li.locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Main content */
+.cd-content {
+  flex: 1;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 60px);
+}
+@media (max-width: 768px) {
+  .cd-content {
+    max-height: none;
+  }
+}
+
+/* Card & video */
+.cd-card {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.cd-video {
+  width: 100%;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Loading & error */
+.cd-loading,
+.cd-error {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
 }

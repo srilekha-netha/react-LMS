@@ -1,11 +1,10 @@
-/* Container Styling */
+/* ───────── Container & Title ───────── */
 .explore-container {
   padding: 2rem 2.5rem;
   background-color: #f4f7fb;
   min-height: 100vh;
   box-sizing: border-box;
 }
-
 .explore-title {
   font-size: 2rem;
   font-weight: 600;
@@ -15,204 +14,185 @@
   letter-spacing: 0.5px;
 }
 
-/* Grid Layout */
+/* ───────── Course Grid ───────── */
 .course-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem;
   animation: fadeIn 0.6s ease-in-out;
 }
-
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Card Styling */
+/* ───────── Course Card ───────── */
 .course-card {
+  position: relative;
   background: linear-gradient(145deg, #ffffff, #eef2f7);
   border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: all 0.3s ease;
-  position: relative;
-  border: 1px solid #dce3ed;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
-
 .course-card:hover {
   transform: translateY(-5px) scale(1.01);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
 }
 
 /* Badge */
 .badge {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  background-color: #ff4757;
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: bold;
+  top: 0.75rem; right: 0.75rem;
+  background: #ff4757; color: #fff;
+  font-size: 0.7rem; font-weight: bold;
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   z-index: 10;
 }
 
 /* Thumbnail */
 .img-wrap {
   height: 180px;
-  background-color: #f6f9fc;
-  display: flex;
-  align-items: center;
+  background: #f6f9fc;
+  display: flex; align-items: center;
   justify-content: center;
   overflow: hidden;
 }
-
 .course-img {
-  max-width: 100%;
-  max-height: 100%;
+  max-width: 100%; max-height: 100%;
   object-fit: contain;
 }
-
 .no-img {
-  font-size: 1rem;
-  color: #aaa;
+  font-size: 1rem; color: #aaa;
 }
 
-/* Course Info */
+/* Info & Enroll */
 .info {
   padding: 1rem 1.2rem;
   flex-grow: 1;
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
 }
-
 .title {
   font-size: 1.15rem;
   font-weight: 600;
   color: #2d3436;
   margin-bottom: 0.6rem;
 }
-
 .meta {
   font-size: 0.95rem;
   color: #4b5563;
   margin-bottom: 0.4rem;
 }
-
-/* Enroll Button */
 .enroll {
   margin-top: auto;
   padding: 0.6rem;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.25s ease;
+  background: #007bff; color: #fff;
+  border: none; border-radius: 8px;
+  font-weight: bold; cursor: pointer;
+  transition: background-color 0.25s;
 }
-
 .enroll:hover {
-  background-color: #0056b3;
+  background: #0056b3;
 }
 
-/* Modal Styling */
+/* ───────── Modal Backdrop ───────── */
 .modal-backdrop {
-  position: absolute; /* ✅ changed from fixed */
-  top: 0;
-  left: 0;
-  width: 100%;
-  min-height: 100%;
-  background-color: transparent; /* ✅ no black overlay */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 1rem;
-  box-sizing: border-box;
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem; overflow-y: auto; z-index: 9999;
 }
 
-
+/* ───────── Modal Card ───────── */
 .modal-card {
-  background-color: white;
-  max-width: 850px;
-  width: 100%;
-  border-radius: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  box-shadow: transparent;
-  position: relative;
-  overflow: hidden;
+  background: #fff;
+  border-radius: 12px;
+  max-width: 900px; width: 100%;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  position: relative; overflow: hidden;
 }
-
-.modal-left,
-.modal-right {
-  flex: 1 1 320px;
-  padding: 1.5rem;
-}
-
-.modal-img {
-  max-width: 100%;
-  max-height: 300px;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
 .close-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1.5rem;
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #333;
+  position: absolute; top: 0.75rem; right: 1rem;
+  font-size: 1.75rem; background: none; border: none;
   cursor: pointer;
 }
 
-/* Coupon Section */
-.coupon-box {
-  display: flex;
-  gap: 0.6rem;
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
+.modal-body {
+  display: flex; flex-wrap: wrap;
+}
+.modal-left {
+  flex: 1 1 320px; padding: 1.5rem;
+}
+.modal-right {
+  flex: 1 1 280px;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-img {
+  max-width: 100%; border-radius: 8px;
+}
+.no-img-preview {
+  font-size: 0.9rem; color: #777;
 }
 
+/* ───────── Modal Content ───────── */
+.modal-title {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+.modal-desc {
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+.coupon-box {
+  display: flex; gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
 .coupon-input {
   flex: 1;
-  padding: 0.5rem;
+  padding: 0.6rem;
   border: 1px solid #ccc;
   border-radius: 6px;
-  font-size: 0.95rem;
 }
-
 .btn-apply,
 .btn-enroll {
-  padding: 0.55rem 1rem;
-  background-color: #28a745;
+  padding: 0.6rem 1rem;
   border: none;
-  color: white;
-  font-weight: 500;
-  border-radius: 8px;
+  border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.2s;
 }
-
-.btn-apply:hover,
+.btn-apply {
+  background: #17a2b8; color: #fff;
+}
+.btn-apply:hover {
+  background: #138496;
+}
+.btn-enroll {
+  background: #28a745; color: #fff;
+  margin-top: 1rem;
+}
 .btn-enroll:hover {
-  background-color: #218838;
+  background: #218838;
+}
+.apply-msg {
+  margin-bottom: 1rem;
+  color: #155724;
 }
 
-.apply-msg {
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-  color: #007bff;
+/* ───────── Responsive ───────── */
+@media (max-width: 768px) {
+  .modal-body {
+    flex-direction: column;
+  }
+  .modal-right {
+    margin-top: 1rem;
+  }
 }

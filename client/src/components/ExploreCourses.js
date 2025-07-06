@@ -3,52 +3,54 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./ExploreCourses.css";
 
-function ExploreCourses() {
-  const [courses, setCourses] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [coupon, setCoupon] = useState("");
-  const [applyMsg, setApplyMsg] = useState("");
+export default function ExploreCourses() {
+  const [courses, setCourses]       = useState([]);
+  const [showModal, setShowModal]   = useState(false);
+  const [selectedCourse, setCourse] = useState(null);
+  const [coupon, setCoupon]         = useState("");
+  const [applyMsg, setApplyMsg]     = useState("");
   const [finalPrice, setFinalPrice] = useState(0);
 
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user     = JSON.parse(localStorage.getItem("user") || "{}");
 
+  // Redirect if not logged in
   useEffect(() => {
-    if (!user || !user._id) navigate("/login");
+    if (!user._id) navigate("/login");
   }, [user, navigate]);
 
+  // Load courses not yet enrolled
   useEffect(() => {
     axios
       .get(`http://localhost:5000/api/enrollments/notEnrolled/${user._id}`)
-      .then((res) => setCourses(res.data))
-      .catch((err) => {
-        console.error("❌ Failed to load courses:", err);
-        setCourses([]);
-      });
+      .then(res => setCourses(res.data))
+      .catch(() => setCourses([]));
   }, [user._id]);
 
-  const handleView = (course) => {
-    setSelectedCourse(course);
+  // Open modal
+  const openModal = course => {
+    setCourse(course);
     setFinalPrice(course.price);
     setCoupon("");
     setApplyMsg("");
     setShowModal(true);
+    document.body.style.overflow = "hidden";
   };
 
+  // Close modal
   const closeModal = () => {
     setShowModal(false);
-    setSelectedCourse(null);
+    document.body.style.overflow = "";
   };
 
-  const handleCouponApply = async () => {
+  // Apply coupon
+  const applyCoupon = async () => {
     try {
       const res = await axios.post("http://localhost:5000/api/coupons/apply", {
         courseId: selectedCourse._id,
         code: coupon,
         userId: user._id,
       });
-
       if (res.data.discountedPrice !== undefined) {
         setFinalPrice(res.data.discountedPrice);
       }
@@ -58,9 +60,10 @@ function ExploreCourses() {
     }
   };
 
-  const handleEnroll = async () => {
+  // Enroll & pay
+  const enroll = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/api/payments/create-order", {
+      const orderRes = await axios.post("http://localhost:5000/api/payments/create-order", {
         amount: finalPrice,
         studentId: user._id,
         courseId: selectedCourse._id,
@@ -68,18 +71,17 @@ function ExploreCourses() {
 
       const options = {
         key: "rzp_test_dGFALpaB5MZyZr",
-        amount: res.data.amount,
+        amount: orderRes.data.amount,
         currency: "INR",
         name: "LMS Payment",
         description: selectedCourse.title,
-        order_id: res.data.id,
-        handler: async function (response) {
+        order_id: orderRes.data.id,
+        handler: async response => {
           await axios.post("http://localhost:5000/api/enrollments/enroll", {
             userId: user._id,
             courseId: selectedCourse._id,
             amountPaid: finalPrice,
           });
-
           await axios.post("http://localhost:5000/api/payments/save", {
             studentId: user._id,
             courseId: selectedCourse._id,
@@ -87,129 +89,93 @@ function ExploreCourses() {
             coupon,
             paymentId: response.razorpay_payment_id,
             orderId: response.razorpay_order_id,
-            receipt: res.data.receipt,
+            receipt: orderRes.data.receipt,
             status: "paid",
           });
-
           alert("✅ Enrolled successfully!");
           closeModal();
           navigate("/student/my-courses");
         },
-        prefill: {
-          name: user.name,
-          email: user.email,
-        },
+        prefill: { name: user.name, email: user.email },
         theme: { color: "#3399cc" },
       };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
+      new window.Razorpay(options).open();
+    } catch {
       alert("❌ Payment failed");
     }
   };
 
-  return React.createElement(
-    "div",
-    { className: "explore-container" },
-    React.createElement("h2", { className: "explore-title" }, "📚 Explore Courses"),
-    React.createElement(
-      "div",
-      { className: "course-grid" },
-      courses.map((course) =>
-        React.createElement(
-          "div",
-          { className: "course-card", key: course._id },
-          React.createElement("span", { className: "badge" }, "🔥 New"),
-          React.createElement(
-            "div",
-            { className: "img-wrap" },
-            course.thumbnail
-              ? React.createElement("img", {
-                  src: `http://localhost:5000/uploads/thumbnails/${course.thumbnail}`,
-                  alt: course.title,
-                  className: "course-img",
-                })
-              : React.createElement("div", { className: "course-img no-img" }, "No Image")
-          ),
-          React.createElement(
-            "div",
-            { className: "info" },
-            React.createElement("h5", { className: "title" }, course.title),
-            React.createElement("p", { className: "meta" }, React.createElement("strong", null, "Instructor:"), " ", course.instructor || "N/A"),
-            React.createElement("p", { className: "meta" }, React.createElement("strong", null, "Level:"), " ", course.difficulty || "Beginner"),
-            React.createElement("p", { className: "meta" }, React.createElement("strong", null, "Price:"), ` ₹${course.price}`),
-            React.createElement(
-              "button",
-              {
-                className: "enroll",
-                onClick: () => handleView(course),
-              },
-              "View & Enroll"
-            )
-          )
-        )
-      )
-    ),
-    showModal &&
-      selectedCourse &&
-      React.createElement(
-        "div",
-        { className: "modal-backdrop" },
-        React.createElement(
-          "div",
-          { className: "modal-card" },
-          React.createElement("span", {
-            className: "close-btn",
-            onClick: closeModal,
-            children: "×",
-          }),
-          React.createElement(
-            "div",
-            { className: "modal-left" },
-            React.createElement("h3", { className: "title" }, selectedCourse.title),
-            React.createElement("p", null, selectedCourse.description),
-            React.createElement(
-              "div",
-              { className: "coupon-box" },
-              React.createElement("input", {
-                type: "text",
-                placeholder: "Enter Coupon",
-                value: coupon,
-                onChange: (e) => setCoupon(e.target.value),
-                className: "coupon-input",
-              }),
-              React.createElement(
-                "button",
-                {
-                  className: "btn-apply",
-                  onClick: handleCouponApply,
-                },
-                "Apply"
-              )
-            ),
-            applyMsg && React.createElement("p", { className: "apply-msg" }, applyMsg),
-            React.createElement(
-              "button",
-              {
-                className: "btn-enroll",
-                onClick: handleEnroll,
-              },
-              `Enroll & Pay ₹${finalPrice}`
-            )
-          ),
-          React.createElement(
-            "div",
-            { className: "modal-right" },
-            React.createElement("img", {
-              src: `http://localhost:5000/uploads/thumbnails/${selectedCourse.thumbnail}`,
-              alt: "preview",
-              className: "modal-img",
-            })
-          )
-        )
-      )
+  return (
+    <div className="explore-container">
+      <h2 className="explore-title">📚 Explore Courses</h2>
+
+      <div className="course-grid">
+        {courses.map(c => (
+          <div className="course-card" key={c._id}>
+            <span className="badge">🔥 New</span>
+            <div className="img-wrap">
+              {c.thumbnail
+                ? <img
+                    src={`http://localhost:5000/uploads/thumbnails/${c.thumbnail}`}
+                    alt={c.title}
+                    className="course-img"
+                  />
+                : <div className="course-img no-img">No Image</div>
+              }
+            </div>
+            <div className="info">
+              <h5 className="title">{c.title}</h5>
+              <p className="meta"><strong>Instructor:</strong> {c.instructor || "N/A"}</p>
+              <p className="meta"><strong>Level:</strong> {c.difficulty || "Beginner"}</p>
+              <p className="meta"><strong>Price:</strong> ₹{c.price}</p>
+              <button className="enroll" onClick={() => openModal(c)}>
+                View & Enroll
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {showModal && (
+        <div className="modal-backdrop" onClick={closeModal}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <button className="close-btn" onClick={closeModal}>×</button>
+            <div className="modal-body">
+              <div className="modal-left">
+                <h3 className="modal-title">{selectedCourse.title}</h3>
+                <p className="modal-desc">{selectedCourse.description}</p>
+                <div className="coupon-box">
+                  <input
+                    type="text"
+                    className="coupon-input"
+                    placeholder="Enter coupon code"
+                    value={coupon}
+                    onChange={e => setCoupon(e.target.value)}
+                  />
+                  <button className="btn-apply" onClick={applyCoupon}>
+                    Apply
+                  </button>
+                </div>
+                {applyMsg && <p className="apply-msg">{applyMsg}</p>}
+                <button className="btn-enroll" onClick={enroll}>
+                  Enroll &amp; Pay ₹{finalPrice}
+                </button>
+              </div>
+              <div className="modal-right">
+                {selectedCourse.thumbnail
+                  ? <img
+                      src={`http://localhost:5000/uploads/thumbnails/${selectedCourse.thumbnail}`}
+                      alt="preview"
+                      className="modal-img"
+                    />
+                  : <div className="no-img-preview">No Image</div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
-
-export default ExploreCourses;

@@ -1,12 +1,13 @@
 import React, { useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import "./StudentDashboardOverrides.css";
+import "./StudentDashboard.css";            // your existing base styles
+import "./StudentDashboardOverrides.css";  // the enhanced overrides
 
 export default function StudentDashboard() {
   const location = useLocation();
   const studentName = localStorage.getItem("studentName") || "Student";
 
-  // preload Font-Awesome for footer icons
+  // preload Font Awesome for footer icons
   useEffect(() => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
@@ -18,7 +19,6 @@ export default function StudentDashboard() {
   const navItems = [
     { to: "/student/explore", icon: "search", label: "Explore Courses" },
     { to: "/student/my-courses", icon: "book", label: "My Courses" },
-    { to: "/student/progress", icon: "bar-chart-line", label: "Progress Tracker" },
     { to: "/student/assignments", icon: "upload", label: "Assignments" },
     { to: "/student/quizzes", icon: "question-circle", label: "Quizzes" },
     { to: "/student/messages", icon: "chat-left-text-fill", label: "Messages" },
@@ -38,30 +38,32 @@ export default function StudentDashboard() {
         rel="stylesheet"
       />
 
+      {/* Header */}
       <nav className="student-navbar">
-        <span className="logo-title">🎓 LMS Student</span>
-        <div className="d-flex align-items-center gap-3">
-          <span className="student-nav-user">
-            <i className="bi bi-person-circle me-2"></i>
-            {studentName}
-          </span>
+        <div className="student-nav-left">
+          <span className="logo-title">🎓 LMS Student</span>
+          
+        </div>
+        <div className="student-nav-actions">
           <Link to="/student/notifications" className="btn btn-link p-0">
             <i className="bi bi-bell-fill fs-4 text-white"></i>
           </Link>
           <Link to="/student/logout" className="btn btn-outline-light btn-sm">
-            <i className="bi bi-box-arrow-right me-1"></i> Logout
+            <i className="bi bi-box-arrow-right me-1"></i>Logout
           </Link>
         </div>
       </nav>
 
+      {/* Body */}
       <div className="dashboard-body">
+        {/* Sidebar */}
         <aside className="student-sidebar">
           <h5 className="sidebar-title">
             <i className="bi bi-person-fill me-2"></i>
             {studentName}
           </h5>
           <ul className="sidebar-nav">
-            {navItems.map(item => (
+            {navItems.map((item) => (
               <li
                 key={item.to}
                 className={`sidebar-nav-item ${
@@ -77,11 +79,13 @@ export default function StudentDashboard() {
           </ul>
         </aside>
 
+        {/* Main Content */}
         <main className="student-page-content">
           <Outlet />
         </main>
       </div>
 
+      {/* Footer */}
       <footer className="student-footer">
         <div className="footer-icons">
           <a href="https://instagram.com/yourorg" target="_blank" rel="noopener noreferrer">
