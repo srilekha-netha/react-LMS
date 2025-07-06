@@ -529,4 +529,83 @@ body::-webkit-scrollbar {
     align-self: flex-end;
   }
 }
+/* ──────────────────────────────────────────────────────────── */
+/* My Courses grid: exactly 3 cards per row, then 2, then 1 */
+/* ──────────────────────────────────────────────────────────── */
+.container.py-4 .row.g-4 {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 1.5rem !important;
+}
 
+/* 2 columns at medium–large screens */
+@media (max-width: 1200px) {
+  .container.py-4 .row.g-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* 1 column on tablets/phones */
+@media (max-width: 768px) {
+  .container.py-4 .row.g-4 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ────────────────────────────────────────────────────────── */
+/* 1) Make .course-cell a flex‐item in the .row, 3 per row on lg screens */
+/* ────────────────────────────────────────────────────────── */
+.course-cell {
+  display: flex;
+  flex: 0 0 100%;
+  max-width: 100%;
+  padding: 0.5rem;        /* match your .row gutter */
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .course-cell {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+@media (min-width: 992px) {
+  .course-cell {
+    flex: 0 0 33.3333%;
+    max-width: 33.3333%;
+  }
+}
+
+/* ────────────────────────────────────────────────────────── */
+/* 2) Stretch the card inside to full height, column layout */
+/* ────────────────────────────────────────────────────────── */
+.course-cell .course-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ────────────────────────────────────────────────────────── */
+/* 3) Make its body flex and push the .mt-auto row to the bottom */
+/* ────────────────────────────────────────────────────────── */
+.course-cell .course-card .card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.course-cell .course-card .card-body .mt-auto {
+  margin-top: auto !important;
+}
+
+
+/* ──────────────────────────────────────────────────────────── */
+/* Clamp description text to 3 lines with ellipsis */
+/* ──────────────────────────────────────────────────────────── */
+.course-cell .card-text {
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}

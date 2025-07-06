@@ -1,43 +1,43 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import "./StudentDashboard.css"; // Import your dashboard CSS
+import "./TeacherLayout.css"; // you can keep your old styles here if needed
 
-function MyCourses() {
+export default function MyCourses() {
   const [courses, setCourses] = useState([]);
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    async function fetchCourses() {
       if (!user._id) return;
-      const res = await axios.get(`http://localhost:5000/api/courses/teacher/${user._id}`);
-      setCourses(res.data);
-    };
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/api/courses/teacher/${user._id}`
+        );
+        setCourses(res.data);
+      } catch (err) {
+        console.error("Failed to load courses", err);
+      }
+    }
     fetchCourses();
   }, [user._id]);
 
   const handleDelete = async (id) => {
-  console.log("📛 Deleting course ID:", id, typeof id); // <-- Debug ID type too
-
-  if (!id) {
-    alert("Invalid course ID");
-    return;
-  }
-
-  if (window.confirm("Delete this course?")) {
+    if (!id) return alert("Invalid course ID");
+    if (!window.confirm("Delete this course?")) return;
     try {
       await axios.delete(`http://localhost:5000/api/courses/${id}`);
       alert("Course deleted!");
-      const user = JSON.parse(localStorage.getItem("user"));
-      const res = await axios.get(`http://localhost:5000/api/courses/teacher/${user._id}`);
+      // reload
+      const res = await axios.get(
+        `http://localhost:5000/api/courses/teacher/${user._id}`
+      );
       setCourses(res.data);
     } catch (err) {
-      console.error("❌ Delete failed:", err.response?.data || err.message);
-      alert("Failed to delete course");
+      console.error("Delete failed:", err);
+      alert("Failed to delete");
     }
-  }
-};
-
+  };
 
   return (
     <div className="container py-4">
@@ -47,8 +47,8 @@ function MyCourses() {
       ) : (
         <div className="row g-4">
           {courses.map((course) => (
-            <div className="col-12 col-md-6 col-lg-4" key={course._id}>
-              <div className="card course-card shadow-sm border-0 h-100 position-relative">
+            <div className="course-cell" key={course._id}>
+              <div className="card course-card shadow-sm border-0 h-100">
                 <div className="card-img-top-wrap">
                   {course.thumbnail ? (
                     <img
@@ -62,39 +62,45 @@ function MyCourses() {
                     </div>
                   )}
                   <span
-                    className={`badge position-absolute top-0 end-0 mt-2 me-2 rounded-pill px-3 py-1 small 
-                    ${course.published ? "bg-success" : "bg-secondary"}`}
+                    className={`badge position-absolute top-0 end-0 mt-2 me-2 rounded-pill px-3 py-1 small ${
+                      course.published ? "bg-success" : "bg-secondary"
+                    }`}
                   >
                     {course.published ? "Published" : "Draft"}
                   </span>
                 </div>
                 <div className="card-body d-flex flex-column">
                   <h5 className="card-title text-truncate">{course.title}</h5>
-                  <p className="card-text small text-muted" style={{ minHeight: "48px" }}>
-                    {course.description ? course.description.slice(0, 90) : "No description"}
-                    {course.description && course.description.length > 90 ? "..." : ""}
+                  <p
+                    className="card-text small text-muted"
+                    style={{ minHeight: "48px" }}
+                  >
+                    {course.description
+                      ? course.description.slice(0, 90)
+                      : "No description"}
+                    {course.description && course.description.length > 90
+                      ? "..."
+                      : ""}
                   </p>
-                  <div className="mt-auto">
-                    <div className="d-flex gap-2 justify-content-end">
-                      <Link
-                        to={`/teacher/courses/${course._id}/edit`}
-                        className="btn btn-outline-primary btn-sm course-btn"
-                      >
-                        Edit
-                      </Link>
-                      <Link
-                        to={`/teacher/courses/${course._id}/content`}
-                        className="btn btn-outline-secondary btn-sm course-btn"
-                      >
-                        Content
-                      </Link>
-                      <button
-                        className="btn btn-outline-danger btn-sm course-btn"
-                        onClick={() => handleDelete(course._id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                  <div className="mt-auto d-flex gap-2 justify-content-end">
+                    <Link
+                      to={`/teacher/courses/${course._id}/edit`}
+                      className="btn btn-outline-primary btn-sm course-btn"
+                    >
+                      Edit
+                    </Link>
+                    <Link
+                      to={`/teacher/courses/${course._id}/content`}
+                      className="btn btn-outline-secondary btn-sm course-btn"
+                    >
+                      Content
+                    </Link>
+                    <button
+                      className="btn btn-outline-danger btn-sm course-btn"
+                      onClick={() => handleDelete(course._id)}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>
@@ -105,5 +111,3 @@ function MyCourses() {
     </div>
   );
 }
-
-export default MyCourses;
